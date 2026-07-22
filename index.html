@@ -1,546 +1,153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ReviewFlow - Richieste recensioni</title>
-  <style>
-    :root{
-      --bg:#f5f7fb;--panel:#ffffff;--panel-2:#eef2ff;--text:#182230;--muted:#667085;
-      --line:#e4e7ec;--primary:#3157d5;--primary-2:#2446b6;--success:#087a55;--warn:#b54708;
-      --danger:#b42318;--shadow:0 14px 40px rgba(16,24,40,.08);--radius:18px
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-    button,input,textarea,select{font:inherit}
-    button{cursor:pointer}
-    .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
-    aside{background:#111827;color:#fff;padding:24px 18px;position:sticky;top:0;height:100vh}
-    .brand{font-size:22px;font-weight:800;margin:0 0 6px}
-    .brand-sub{color:#aab3c5;font-size:13px;margin-bottom:28px}
-    .nav{display:grid;gap:8px}
-    .nav button{width:100%;text-align:left;border:0;background:transparent;color:#cfd5df;padding:12px 14px;border-radius:12px}
-    .nav button.active,.nav button:hover{background:#263246;color:white}
-    .side-note{position:absolute;left:18px;right:18px;bottom:20px;background:#1e293b;padding:14px;border-radius:14px;color:#cbd5e1;font-size:12px;line-height:1.5}
-    main{padding:28px;max-width:1480px;width:100%;margin:0 auto}
-    .topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:24px}
-    h1{font-size:30px;margin:0 0 6px}
-    .subtitle{color:var(--muted);margin:0}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{border:1px solid var(--line);background:white;padding:10px 14px;border-radius:11px;font-weight:700;color:var(--text)}
-    .btn:hover{filter:brightness(.98)}
-    .btn.primary{background:var(--primary);border-color:var(--primary);color:white}
-    .btn.primary:hover{background:var(--primary-2)}
-    .btn.danger{color:var(--danger)}
-    .grid{display:grid;gap:18px}
-    .stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .stat{padding:20px}
-    .stat .label{font-size:13px;color:var(--muted);font-weight:700}
-    .stat .value{font-size:30px;font-weight:850;margin-top:9px}
-    .stat .hint{font-size:12px;color:var(--muted);margin-top:5px}
-    .section{padding:22px}
-    .section-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
-    .section h2{margin:0;font-size:20px}
-    .two-col{grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr)}
-    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-    .field{display:grid;gap:7px}
-    .field.full{grid-column:1/-1}
-    label{font-size:13px;font-weight:750;color:#344054}
-    input,textarea,select{width:100%;border:1px solid #d0d5dd;border-radius:11px;padding:11px 12px;background:white;color:var(--text);outline:none}
-    input:focus,textarea:focus,select:focus{border-color:#7f9cf5;box-shadow:0 0 0 3px rgba(49,87,213,.12)}
-    textarea{resize:vertical;min-height:120px}
-    .helper{font-size:12px;color:var(--muted)}
-    .preview-shell{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:16px}
-    .email-preview{background:white;border:1px solid var(--line);border-radius:14px;padding:22px;min-height:380px}
-    .email-preview .subject{font-weight:800;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:18px}
-    .email-preview .body{white-space:pre-wrap;line-height:1.65;color:#344054}
-    .review-button{display:inline-block;margin-top:18px;background:var(--primary);color:white;padding:12px 17px;border-radius:10px;font-weight:800;text-decoration:none}
-    .toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-    .table-wrap{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:850px}
-    th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
-    th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-    td{font-size:14px}
-    .badge{display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;font-size:12px;font-weight:800}
-    .badge.non-inviata{background:#f2f4f7;color:#475467}
-    .badge.inviata{background:#eef4ff;color:#3538cd}
-    .badge.promemoria{background:#fff6ed;color:#b54708}
-    .badge.completata{background:#ecfdf3;color:#067647}
-    .row-actions{display:flex;gap:7px;flex-wrap:wrap}
-    .icon-btn{border:1px solid var(--line);background:white;padding:7px 9px;border-radius:9px}
-    .hidden{display:none!important}
-    .empty{padding:34px;text-align:center;color:var(--muted)}
-    .template-list{display:grid;gap:10px}
-    .template-item{border:1px solid var(--line);border-radius:13px;padding:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
-    .template-item strong{display:block}
-    .template-item span{font-size:12px;color:var(--muted)}
-    .notice{background:#fffaeb;border:1px solid #fedf89;color:#7a2e0e;padding:13px 15px;border-radius:12px;font-size:13px;line-height:1.5;margin-bottom:16px}
-    .toast{position:fixed;right:22px;bottom:22px;background:#101828;color:white;padding:13px 16px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}
-    .toast.show{opacity:1;transform:translateY(0)}
-    .modal{position:fixed;inset:0;background:rgba(16,24,40,.55);display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}
-    .modal-card{background:white;border-radius:18px;max-width:560px;width:100%;padding:22px;box-shadow:var(--shadow)}
-    .modal-card h3{margin-top:0}
-    @media(max-width:980px){
-      .app{grid-template-columns:1fr}
-      aside{height:auto;position:relative}
-      .side-note{display:none}
-      .nav{grid-template-columns:repeat(4,1fr)}
-      .nav button{text-align:center}
-      .stats,.two-col{grid-template-columns:1fr 1fr}
-    }
-    @media(max-width:720px){
-      main{padding:18px}
-      .topbar{align-items:flex-start;flex-direction:column}
-      .stats,.two-col,.form-grid{grid-template-columns:1fr}
-      .field.full{grid-column:auto}
-      .nav{grid-template-columns:1fr 1fr}
-    }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReviewFlow 1.2</title>
+<style>
+:root{--bg:#f5f7fb;--panel:#fff;--text:#182230;--muted:#667085;--line:#e4e7ec;--primary:#3157d5;--danger:#b42318;--shadow:0 12px 32px rgba(16,24,40,.08)}
+body.dark{--bg:#0f172a;--panel:#111827;--text:#f8fafc;--muted:#94a3b8;--line:#334155;--primary:#6d8cff;--danger:#f87171}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}button,input,textarea,select{font:inherit}button{cursor:pointer}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}aside{background:#111827;color:white;padding:22px;position:sticky;top:0;height:100vh}.brand{font-size:22px;font-weight:800}.sub{color:#aab3c5;font-size:12px;margin:6px 0 24px}.nav{display:grid;gap:8px}.nav button{border:0;background:transparent;color:#cbd5e1;text-align:left;padding:12px;border-radius:10px}.nav button.active,.nav button:hover{background:#263246;color:white}
+main{padding:26px;max-width:1500px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:20px}.top h1{margin:0}.muted{color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 13px;border-radius:10px;font-weight:700}.btn.primary{background:var(--primary);border-color:var(--primary);color:white}.btn.danger{color:var(--danger)}
+.grid{display:grid;gap:18px}.stats{grid-template-columns:repeat(4,1fr);margin-bottom:20px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px}.stat .n{font-size:30px;font-weight:850;margin-top:8px}.stat .l{font-size:12px;font-weight:800;color:var(--muted)}
+.two{grid-template-columns:1fr 1fr}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}.field{display:grid;gap:6px}label{font-size:13px;font-weight:750}input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}textarea{min-height:170px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.preview{white-space:pre-wrap;line-height:1.6;border:1px solid var(--line);padding:18px;border-radius:12px;min-height:320px}.preview strong{display:block;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}.review-btn{display:inline-block;background:var(--primary);color:white;text-decoration:none;padding:11px 15px;border-radius:9px;font-weight:800;margin-top:14px}
+.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase}.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;color:#3538cd;font-size:12px;font-weight:800}.overdue{background:rgba(181,71,8,.08)}.archived{opacity:.65}.actions{display:flex;gap:6px;flex-wrap:wrap}.mini{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+.hidden{display:none!important}.list{display:grid;gap:10px}.item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}.empty{text-align:center;padding:28px;color:var(--muted)}.dangerzone{border:1px solid rgba(180,35,24,.35);padding:15px;border-radius:12px;background:rgba(180,35,24,.04)}.toast{position:fixed;right:20px;bottom:20px;background:#101828;color:white;padding:12px 15px;border-radius:10px;opacity:0;transform:translateY(10px);transition:.2s}.toast.show{opacity:1;transform:none}
+@media(max-width:900px){.app{grid-template-columns:1fr}aside{height:auto;position:relative}.nav{grid-template-columns:repeat(4,1fr)}.nav button{text-align:center}.stats,.two{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){main{padding:16px}.stats,.two,.form{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start;flex-direction:column}.nav{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 <div class="app">
-  <aside>
-    <div class="brand">ReviewFlow</div>
-    <div class="brand-sub">Richieste recensioni semplificate</div>
-    <div class="nav">
-      <button class="active" data-view="dashboard">Dashboard</button>
-      <button data-view="clients">Clienti</button>
-      <button data-view="templates">Template</button>
-      <button data-view="settings">Impostazioni</button>
-    </div>
-    <div class="side-note">
-      I dati restano nel browser tramite localStorage. Le email vengono aperte nel programma di posta predefinito.
-    </div>
-  </aside>
-
-  <main>
-    <section id="view-dashboard">
-      <div class="topbar">
-        <div>
-          <h1>Dashboard</h1>
-          <p class="subtitle">Crea e invia richieste di recensione in pochi passaggi.</p>
-        </div>
-        <div class="actions">
-          <button class="btn" id="exportCsvTop">Esporta CSV</button>
-          <button class="btn primary" id="focusNewClient">+ Nuovo cliente</button>
-        </div>
-      </div>
-
-      <div class="grid stats">
-        <div class="card stat"><div class="label">CLIENTI</div><div class="value" id="statTotal">0</div><div class="hint">Totale inseriti</div></div>
-        <div class="card stat"><div class="label">EMAIL INVIATE</div><div class="value" id="statSent">0</div><div class="hint">Richieste inviate</div></div>
-        <div class="card stat"><div class="label">PROMEMORIA</div><div class="value" id="statReminder">0</div><div class="hint">Promemoria inviati</div></div>
-        <div class="card stat"><div class="label">COMPLETATE</div><div class="value" id="statDone">0</div><div class="hint">Segnate come concluse</div></div>
-      </div>
-
-      <div class="grid two-col">
-        <div class="card section">
-          <div class="section-head">
-            <div><h2>Nuova richiesta</h2><div class="helper">Compila i dati e prepara l’email.</div></div>
-          </div>
-          <form id="clientForm">
-            <input type="hidden" id="clientId" />
-            <div class="form-grid">
-              <div class="field"><label for="name">Nome cliente *</label><input id="name" required placeholder="Mario" /></div>
-              <div class="field"><label for="email">Email *</label><input id="email" type="email" required placeholder="mario@email.it" /></div>
-              <div class="field"><label for="company">Azienda / attività</label><input id="company" placeholder="Studio Rossi" /></div>
-              <div class="field"><label for="template">Template</label><select id="template"></select></div>
-              <div class="field full"><label for="reviewLink">Link recensione *</label><input id="reviewLink" type="url" required placeholder="https://g.page/r/..." /></div>
-              <div class="field full"><label for="note">Nota interna</label><input id="note" placeholder="Servizio svolto, data, dettaglio utile..." /></div>
-            </div>
-            <div class="toolbar">
-              <button class="btn primary" type="submit">Salva cliente</button>
-              <button class="btn" type="button" id="resetForm">Svuota</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card section">
-          <div class="section-head">
-            <div><h2>Anteprima email</h2><div class="helper">Il testo usa automaticamente i dati inseriti.</div></div>
-          </div>
-          <div class="preview-shell">
-            <div class="email-preview">
-              <div class="subject" id="previewSubject">Richiesta di recensione</div>
-              <div class="body" id="previewBody"></div>
-              <a class="review-button" id="previewButton" href="#" target="_blank">LASCIA UNA RECENSIONE</a>
-            </div>
-          </div>
-          <div class="toolbar">
-            <button class="btn primary" id="openEmail" type="button">Apri email</button>
-            <button class="btn" id="copyText" type="button">Copia testo</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card section" style="margin-top:20px">
-        <div class="section-head">
-          <div><h2>Clienti recenti</h2><div class="helper">Ultime richieste inserite.</div></div>
-          <button class="btn" data-go="clients">Vedi tutti</button>
-        </div>
-        <div id="recentClients"></div>
-      </div>
-    </section>
-
-    <section id="view-clients" class="hidden">
-      <div class="topbar">
-        <div><h1>Clienti</h1><p class="subtitle">Gestisci richieste, promemoria e stato delle recensioni.</p></div>
-        <div class="actions">
-          <label class="btn" for="csvInput">Importa CSV</label>
-          <input id="csvInput" type="file" accept=".csv" class="hidden" />
-          <button class="btn" id="exportCsv">Esporta CSV</button>
-          <button class="btn primary" data-go="dashboard">+ Nuovo cliente</button>
-        </div>
-      </div>
-      <div class="card section">
-        <div class="section-head">
-          <div><h2>Elenco clienti</h2><div class="helper">Puoi modificare, inviare, ricordare o completare ogni richiesta.</div></div>
-          <div class="actions">
-            <input id="search" placeholder="Cerca nome, email o azienda" style="min-width:260px" />
-            <select id="statusFilter">
-              <option value="">Tutti gli stati</option>
-              <option>Non inviata</option>
-              <option>Inviata</option>
-              <option>Promemoria</option>
-              <option>Completata</option>
-            </select>
-          </div>
-        </div>
-        <div id="clientsTable"></div>
-      </div>
-    </section>
-
-    <section id="view-templates" class="hidden">
-      <div class="topbar">
-        <div><h1>Template</h1><p class="subtitle">Personalizza oggetto e testo delle email.</p></div>
-        <button class="btn primary" id="newTemplate">+ Nuovo template</button>
-      </div>
-      <div class="grid two-col">
-        <div class="card section">
-          <h2 style="margin-bottom:16px">I tuoi template</h2>
-          <div id="templateList" class="template-list"></div>
-        </div>
-        <div class="card section">
-          <h2 style="margin-bottom:16px">Editor template</h2>
-          <form id="templateForm">
-            <input type="hidden" id="templateId" />
-            <div class="field"><label>Nome template</label><input id="templateName" required /></div>
-            <div class="field" style="margin-top:12px"><label>Oggetto</label><input id="templateSubject" required /></div>
-            <div class="field" style="margin-top:12px">
-              <label>Testo</label>
-              <textarea id="templateBody" required style="min-height:260px"></textarea>
-              <div class="helper">Variabili disponibili: {{nome}}, {{azienda}}, {{firma}}, {{link_recensione}}</div>
-            </div>
-            <div class="toolbar">
-              <button class="btn primary" type="submit">Salva template</button>
-              <button class="btn danger" type="button" id="deleteTemplate">Elimina</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-settings" class="hidden">
-      <div class="topbar"><div><h1>Impostazioni</h1><p class="subtitle">Definisci firma e dati predefiniti.</p></div></div>
-      <div class="card section" style="max-width:760px">
-        <div class="notice">Questa versione non invia email da un server: apre il tuo programma di posta con destinatario, oggetto e messaggio già compilati.</div>
-        <form id="settingsForm">
-          <div class="form-grid">
-            <div class="field"><label>Nome / firma</label><input id="signature" placeholder="Roberto Zanoni" /></div>
-            <div class="field"><label>Azienda predefinita</label><input id="defaultCompany" placeholder="Nome attività" /></div>
-            <div class="field full"><label>Link recensione predefinito</label><input id="defaultReviewLink" type="url" placeholder="https://g.page/r/..." /></div>
-          </div>
-          <div class="toolbar"><button class="btn primary" type="submit">Salva impostazioni</button><button class="btn danger" type="button" id="clearAll">Cancella tutti i dati</button></div>
-        </form>
-      </div>
-    </section>
-  </main>
-</div>
-
-<div class="modal hidden" id="confirmModal">
-  <div class="modal-card">
-    <h3 id="modalTitle">Conferma</h3>
-    <p id="modalText"></p>
-    <div class="toolbar">
-      <button class="btn danger" id="modalConfirm">Conferma</button>
-      <button class="btn" id="modalCancel">Annulla</button>
-    </div>
+<aside>
+  <div class="brand">ReviewFlow</div><div class="sub">Richieste recensioni semplificate</div>
+  <div class="nav">
+    <button class="active" data-view="dashboard">Dashboard</button>
+    <button data-view="clients">Clienti</button>
+    <button data-view="templates">Template</button>
+    <button data-view="settings">Impostazioni</button>
   </div>
+</aside>
+<main>
+<section id="dashboard">
+<div class="top"><div><h1>Dashboard</h1><div class="muted">Gestisci richieste, promemoria e recensioni.</div></div><div class="actions"><button class="btn" id="themeBtn">Modalità notte</button><button class="btn primary" id="newBtn">+ Nuovo cliente</button></div></div>
+<div class="grid stats">
+<div class="card stat"><div class="l">CLIENTI</div><div class="n" id="sTotal">0</div></div>
+<div class="card stat"><div class="l">EMAIL INVIATE</div><div class="n" id="sSent">0</div></div>
+<div class="card stat"><div class="l">DA RICONTATTARE</div><div class="n" id="sDue">0</div></div>
+<div class="card stat"><div class="l">COMPLETATE</div><div class="n" id="sDone">0</div></div>
 </div>
+<div class="grid two">
+<div class="card"><h2>Nuova richiesta</h2>
+<form id="clientForm">
+<input type="hidden" id="clientId">
+<div class="form">
+<div class="field"><label>Nome *</label><input id="name" required></div>
+<div class="field"><label>Email *</label><input id="email" type="email" required></div>
+<div class="field"><label>Telefono / WhatsApp</label><input id="phone"></div>
+<div class="field"><label>Attività salvata</label><select id="activityId"><option value="">Nessuna</option></select></div>
+<div class="field"><label>Azienda</label><input id="company"></div>
+<div class="field"><label>Data promemoria</label><input id="reminderDate" type="date"></div>
+<div class="field"><label>Template richiesta</label><select id="templateId"></select></div>
+<div class="field"><label>Template promemoria</label><select id="reminderTemplateId"></select></div>
+<div class="field full"><label>Link recensione *</label><input id="reviewLink" type="url" required></div>
+<div class="field full"><label>Nota interna</label><input id="note"></div>
+</div>
+<div class="toolbar"><button class="btn primary">Salva cliente</button><button class="btn" type="button" id="resetBtn">Svuota</button></div>
+</form>
+</div>
+<div class="card"><h2>Anteprima email</h2><div class="preview"><strong id="previewSubject"></strong><span id="previewBody"></span><br><a id="previewLink" class="review-btn" target="_blank">LASCIA UNA RECENSIONE</a></div><div class="toolbar"><button class="btn primary" id="openEmail" type="button">Apri email</button><button class="btn" id="copyText" type="button">Copia testo</button></div></div>
+</div>
+<div class="card" style="margin-top:18px"><h2>Clienti recenti</h2><div id="recent"></div></div>
+</section>
 
+<section id="clients" class="hidden">
+<div class="top"><div><h1>Clienti</h1><div class="muted">Gestione completa delle richieste.</div></div><div class="actions"><label class="btn" for="csvIn">Importa CSV</label><input class="hidden" id="csvIn" type="file" accept=".csv"><button class="btn" id="csvOut">Esporta CSV</button><button class="btn primary" data-go="dashboard">+ Nuovo</button></div></div>
+<div class="card"><div class="actions" style="margin-bottom:14px"><input id="search" placeholder="Cerca cliente"><select id="statusFilter"><option value="">Tutti gli stati</option><option>Non inviata</option><option>Inviata</option><option>Promemoria</option><option>Completata</option><option>Archiviata</option></select><select id="dueFilter"><option value="">Tutte le scadenze</option><option value="due">Da ricontattare</option><option value="future">Programmate</option><option value="none">Senza data</option></select></div><div id="clientTable"></div></div>
+</section>
+
+<section id="templates" class="hidden">
+<div class="top"><div><h1>Template</h1><div class="muted">Crea testi diversi per richiesta e promemoria.</div></div><button class="btn primary" id="newTemplate">+ Nuovo template</button></div>
+<div class="grid two">
+<div class="card"><div id="templateList" class="list"></div></div>
+<div class="card"><form id="templateForm"><input type="hidden" id="tplId"><div class="field"><label>Nome</label><input id="tplName" required></div><div class="field"><label>Oggetto</label><input id="tplSubject" required></div><div class="field"><label>Testo</label><textarea id="tplBody" required></textarea><div class="muted">Variabili: {{nome}}, {{azienda}}, {{firma}}, {{link_recensione}}</div></div><div class="toolbar"><button class="btn primary">Salva</button><button class="btn" id="tplExport" type="button">Esporta template</button><button class="btn danger" id="tplDelete" type="button">Elimina</button></div></form></div>
+</div>
+</section>
+
+<section id="settings" class="hidden">
+<div class="top"><div><h1>Impostazioni</h1><div class="muted">Dati predefiniti, attività e backup.</div></div></div>
+<div class="grid two">
+<div class="card"><h2>Dati predefiniti</h2><form id="settingsForm"><div class="field"><label>Firma</label><input id="signature"></div><div class="field"><label>Azienda predefinita</label><input id="defaultCompany"></div><div class="field"><label>Link recensione predefinito</label><input id="defaultReviewLink"></div><div class="toolbar"><button class="btn primary">Salva impostazioni</button></div></form><hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><label><input id="themeCheck" type="checkbox" style="width:auto"> Attiva modalità notte</label></div>
+<div class="card"><h2>Attività e link</h2><div class="field"><label>Nome attività</label><input id="activityName"></div><div class="field"><label>Link recensione</label><input id="activityLink"></div><div class="toolbar"><button class="btn primary" id="activitySave">Salva attività</button></div><div id="activityList" class="list" style="margin-top:14px"></div></div>
+<div class="card"><h2>Backup completo</h2><p class="muted">Include clienti, template, attività, impostazioni e tema.</p><div class="toolbar"><button class="btn" id="backupOut">Esporta backup</button><label class="btn" for="backupIn">Importa backup</label><input class="hidden" id="backupIn" type="file" accept=".json"></div></div>
+<div class="card"><h2>Area pericolosa</h2><div class="dangerzone"><p class="muted">Scrivi <strong>CANCELLA</strong> per eliminare tutti i dati.</p><input id="deleteWord" placeholder="CANCELLA"><div class="toolbar"><button class="btn danger" id="clearAll">Cancella tutti i dati</button></div></div></div>
+</div>
+</section>
+</main>
+</div>
 <div class="toast" id="toast"></div>
-
 <script>
-const DEFAULT_TEMPLATES = [
-  {
-    id:"tpl-generale",
-    name:"Generale",
-    subject:"Ti va di lasciare una recensione?",
-    body:"Ciao {{nome}},\n\ngrazie per aver scelto {{azienda}}.\n\nLa tua opinione è importante e può aiutare altre persone a scegliere con maggiore fiducia. Ti chiediamo un minuto per raccontare la tua esperienza.\n\nPuoi lasciare la recensione qui:\n{{link_recensione}}\n\nGrazie davvero,\n{{firma}}"
-  },
-  {
-    id:"tpl-professionale",
-    name:"Professionale",
-    subject:"Una breve recensione sul servizio ricevuto",
-    body:"Buongiorno {{nome}},\n\nè stato un piacere lavorare con te. Se il servizio ricevuto ha soddisfatto le tue aspettative, una breve recensione sarebbe molto utile.\n\nLink diretto:\n{{link_recensione}}\n\nGrazie per il tempo dedicato.\n{{firma}}"
-  },
-  {
-    id:"tpl-amichevole",
-    name:"Amichevole",
-    subject:"Ci lasci un piccolo feedback?",
-    body:"Ciao {{nome}}!\n\nSperiamo che la tua esperienza con {{azienda}} sia stata positiva. Ti andrebbe di lasciarci una breve recensione? Bastano davvero pochi secondi.\n\n{{link_recensione}}\n\nGrazie di cuore!\n{{firma}}"
-  }
+const DEF=[
+{id:"general",name:"Generale",subject:"Ti va di lasciare una recensione?",body:"Ciao {{nome}},\\n\\ngrazie per aver scelto {{azienda}}.\\n\\nLa tua opinione è importante. Puoi lasciare una recensione qui:\\n{{link_recensione}}\\n\\nGrazie,\\n{{firma}}"},
+{id:"reminder",name:"Promemoria",subject:"Promemoria recensione",body:"Ciao {{nome}},\\n\\nsolo un piccolo promemoria. Se hai un minuto, puoi lasciare la tua recensione qui:\\n{{link_recensione}}\\n\\nGrazie,\\n{{firma}}"}
 ];
-
-const state = {
-  clients: JSON.parse(localStorage.getItem("reviewflow_clients") || "[]"),
-  templates: JSON.parse(localStorage.getItem("reviewflow_templates") || "null") || DEFAULT_TEMPLATES,
-  settings: JSON.parse(localStorage.getItem("reviewflow_settings") || '{"signature":"","defaultCompany":"","defaultReviewLink":""}')
+const state={
+clients:JSON.parse(localStorage.getItem("rf_clients")||"[]"),
+templates:JSON.parse(localStorage.getItem("rf_templates")||"null")||DEF,
+settings:JSON.parse(localStorage.getItem("rf_settings")||'{"signature":"","defaultCompany":"","defaultReviewLink":""}'),
+activities:JSON.parse(localStorage.getItem("rf_activities")||"[]"),
+theme:localStorage.getItem("rf_theme")||"light"
 };
-
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const uid = p => `${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const save = () => {
-  localStorage.setItem("reviewflow_clients", JSON.stringify(state.clients));
-  localStorage.setItem("reviewflow_templates", JSON.stringify(state.templates));
-  localStorage.setItem("reviewflow_settings", JSON.stringify(state.settings));
-};
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
-function go(view){
-  $$("main > section").forEach(x=>x.classList.add("hidden"));
-  $(`#view-${view}`).classList.remove("hidden");
-  $$(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
-  if(view==="clients") renderClients();
-  if(view==="templates") renderTemplates();
-}
-$$(".nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
-$$("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
-
-function statusClass(status){ return status.toLowerCase().replaceAll(" ","-"); }
-function formatDate(v){ return v ? new Date(v).toLocaleDateString("it-IT") : "—"; }
-
-function applyTemplate(text, data){
-  return text
-    .replaceAll("{{nome}}", data.name || "Nome cliente")
-    .replaceAll("{{azienda}}", data.company || state.settings.defaultCompany || "la nostra attività")
-    .replaceAll("{{firma}}", state.settings.signature || "Il team")
-    .replaceAll("{{link_recensione}}", data.reviewLink || state.settings.defaultReviewLink || "[link recensione]");
-}
-function getFormData(){
-  return {
-    id: $("#clientId").value,
-    name: $("#name").value.trim(),
-    email: $("#email").value.trim(),
-    company: $("#company").value.trim(),
-    reviewLink: $("#reviewLink").value.trim(),
-    templateId: $("#template").value,
-    note: $("#note").value.trim()
-  };
-}
-function currentTemplate(){ return state.templates.find(t=>t.id===$("#template").value) || state.templates[0]; }
-function updatePreview(){
-  const d=getFormData(), t=currentTemplate() || {subject:"Richiesta di recensione",body:""};
-  $("#previewSubject").textContent=applyTemplate(t.subject,d);
-  $("#previewBody").textContent=applyTemplate(t.body,d).replace(/\n?\{\{link_recensione\}\}/g,"");
-  $("#previewButton").href=d.reviewLink || state.settings.defaultReviewLink || "#";
-}
-["name","email","company","reviewLink","template","note"].forEach(id=>$("#"+id).addEventListener("input",updatePreview));
-
-function renderTemplateOptions(){
-  $("#template").innerHTML=state.templates.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");
-  updatePreview();
-}
-function resetForm(){
-  $("#clientForm").reset();
-  $("#clientId").value="";
-  $("#company").value=state.settings.defaultCompany || "";
-  $("#reviewLink").value=state.settings.defaultReviewLink || "";
-  if(state.templates[0]) $("#template").value=state.templates[0].id;
-  updatePreview();
-}
-$("#resetForm").onclick=resetForm;
-$("#focusNewClient").onclick=()=>{go("dashboard"); resetForm(); $("#name").focus();};
-
-$("#clientForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  const d=getFormData();
-  if(!d.name||!d.email||!d.reviewLink) return toast("Compila i campi obbligatori");
-  const now=new Date().toISOString();
-  if(d.id){
-    const idx=state.clients.findIndex(c=>c.id===d.id);
-    state.clients[idx]={...state.clients[idx],...d,updatedAt:now};
-    toast("Cliente aggiornato");
-  } else {
-    state.clients.unshift({...d,id:uid("cli"),status:"Non inviata",createdAt:now,updatedAt:now,lastSentAt:null});
-    toast("Cliente salvato");
-  }
-  save(); resetForm(); renderAll();
-});
-
-function buildMailto(client, reminder=false){
-  const t=state.templates.find(x=>x.id===client.templateId)||state.templates[0];
-  const prefix=reminder ? "Promemoria: " : "";
-  const subject=prefix+applyTemplate(t.subject,client);
-  let body=applyTemplate(t.body,client);
-  if(reminder) body="Ciao "+client.name+",\n\nsolo un piccolo promemoria rispetto alla richiesta precedente.\n\n"+body;
-  return `mailto:${encodeURIComponent(client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
-function markAndOpen(client, reminder=false){
-  const c=state.clients.find(x=>x.id===client.id);
-  c.status=reminder?"Promemoria":"Inviata";
-  c.lastSentAt=new Date().toISOString();
-  save(); renderAll();
-  window.location.href=buildMailto(c,reminder);
-}
-$("#openEmail").onclick=()=>{
-  const d=getFormData();
-  if(!d.email) return toast("Inserisci prima l’email");
-  window.location.href=buildMailto({...d,templateId:$("#template").value},false);
-};
-$("#copyText").onclick=async()=>{
-  const d=getFormData(), t=currentTemplate();
-  await navigator.clipboard.writeText(applyTemplate(t.body,d));
-  toast("Testo copiato");
-};
-
-function clientsTableHtml(clients){
-  if(!clients.length) return `<div class="empty">Nessun cliente trovato.</div>`;
-  return `<div class="table-wrap"><table>
-  <thead><tr><th>Cliente</th><th>Email</th><th>Azienda</th><th>Stato</th><th>Ultimo invio</th><th>Azioni</th></tr></thead>
-  <tbody>${clients.map(c=>`<tr>
-    <td><strong>${esc(c.name)}</strong><div class="helper">${esc(c.note||"")}</div></td>
-    <td>${esc(c.email)}</td>
-    <td>${esc(c.company||"—")}</td>
-    <td><span class="badge ${statusClass(c.status)}">${esc(c.status)}</span></td>
-    <td>${formatDate(c.lastSentAt)}</td>
-    <td><div class="row-actions">
-      <button class="icon-btn" onclick="editClient('${c.id}')">Modifica</button>
-      <button class="icon-btn" onclick="sendClient('${c.id}',false)">Invia</button>
-      <button class="icon-btn" onclick="sendClient('${c.id}',true)">Promemoria</button>
-      <button class="icon-btn" onclick="completeClient('${c.id}')">Completa</button>
-      <button class="icon-btn" onclick="removeClient('${c.id}')">Elimina</button>
-    </div></td>
-  </tr>`).join("")}</tbody></table></div>`;
-}
-function renderClients(){
-  const q=$("#search").value.toLowerCase().trim(), sf=$("#statusFilter").value;
-  const rows=state.clients.filter(c=>{
-    const hay=[c.name,c.email,c.company,c.note].join(" ").toLowerCase();
-    return (!q||hay.includes(q)) && (!sf||c.status===sf);
-  });
-  $("#clientsTable").innerHTML=clientsTableHtml(rows);
-}
-$("#search").addEventListener("input",renderClients);
-$("#statusFilter").addEventListener("change",renderClients);
-
-window.editClient=id=>{
-  const c=state.clients.find(x=>x.id===id); if(!c)return;
-  go("dashboard");
-  $("#clientId").value=c.id; $("#name").value=c.name; $("#email").value=c.email; $("#company").value=c.company||"";
-  $("#reviewLink").value=c.reviewLink; $("#template").value=c.templateId; $("#note").value=c.note||"";
-  updatePreview(); $("#name").focus();
-};
-window.sendClient=id=>{const c=state.clients.find(x=>x.id===id); if(c)markAndOpen(c,arguments[1]);};
-window.completeClient=id=>{const c=state.clients.find(x=>x.id===id); if(c){c.status="Completata";save();renderAll();toast("Segnata come completata");}};
-let pendingConfirm=null;
-function confirmAction(title,text,fn){pendingConfirm=fn;$("#modalTitle").textContent=title;$("#modalText").textContent=text;$("#confirmModal").classList.remove("hidden");}
-$("#modalCancel").onclick=()=>$("#confirmModal").classList.add("hidden");
-$("#modalConfirm").onclick=()=>{if(pendingConfirm)pendingConfirm();pendingConfirm=null;$("#confirmModal").classList.add("hidden");};
-window.removeClient=id=>confirmAction("Elimina cliente","Questa operazione non può essere annullata.",()=>{
-  state.clients=state.clients.filter(x=>x.id!==id);save();renderAll();toast("Cliente eliminato");
-});
-
-function renderRecent(){
-  $("#recentClients").innerHTML=clientsTableHtml(state.clients.slice(0,5));
-}
-function renderStats(){
-  $("#statTotal").textContent=state.clients.length;
-  $("#statSent").textContent=state.clients.filter(c=>["Inviata","Promemoria","Completata"].includes(c.status)).length;
-  $("#statReminder").textContent=state.clients.filter(c=>c.status==="Promemoria").length;
-  $("#statDone").textContent=state.clients.filter(c=>c.status==="Completata").length;
-}
-
-function renderTemplates(){
-  $("#templateList").innerHTML=state.templates.map(t=>`<div class="template-item">
-    <div><strong>${esc(t.name)}</strong><span>${esc(t.subject)}</span></div>
-    <button class="btn" onclick="editTemplate('${t.id}')">Modifica</button>
-  </div>`).join("");
-  if(!$("#templateId").value && state.templates[0]) editTemplate(state.templates[0].id);
-}
-window.editTemplate=id=>{
-  const t=state.templates.find(x=>x.id===id); if(!t)return;
-  $("#templateId").value=t.id;$("#templateName").value=t.name;$("#templateSubject").value=t.subject;$("#templateBody").value=t.body;
-};
-$("#newTemplate").onclick=()=>{$("#templateForm").reset();$("#templateId").value="";$("#templateName").focus();};
-$("#templateForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  const t={id:$("#templateId").value||uid("tpl"),name:$("#templateName").value.trim(),subject:$("#templateSubject").value.trim(),body:$("#templateBody").value.trim()};
-  const i=state.templates.findIndex(x=>x.id===t.id);
-  if(i>=0)state.templates[i]=t;else state.templates.push(t);
-  save();renderTemplateOptions();renderTemplates();toast("Template salvato");
-});
-$("#deleteTemplate").onclick=()=>{
-  const id=$("#templateId").value;
-  if(!id)return;
-  if(state.templates.length===1)return toast("Mantieni almeno un template");
-  confirmAction("Elimina template","I clienti associati useranno il primo template disponibile.",()=>{
-    state.templates=state.templates.filter(x=>x.id!==id);save();$("#templateForm").reset();renderTemplateOptions();renderTemplates();toast("Template eliminato");
-  });
-};
-
-function loadSettings(){
-  $("#signature").value=state.settings.signature||"";
-  $("#defaultCompany").value=state.settings.defaultCompany||"";
-  $("#defaultReviewLink").value=state.settings.defaultReviewLink||"";
-}
-$("#settingsForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim()};
-  save();resetForm();toast("Impostazioni salvate");
-});
-$("#clearAll").onclick=()=>confirmAction("Cancella tutti i dati","Clienti, template e impostazioni verranno eliminati dal browser.",()=>{
-  localStorage.removeItem("reviewflow_clients");localStorage.removeItem("reviewflow_templates");localStorage.removeItem("reviewflow_settings");location.reload();
-});
-
-function csvEscape(v){const s=String(v??"");return `"${s.replaceAll('"','""')}"`;}
-function exportCsv(){
-  const cols=["nome","email","azienda","link_recensione","template","nota","stato","creato_il","ultimo_invio"];
-  const rows=state.clients.map(c=>[c.name,c.email,c.company,c.reviewLink,(state.templates.find(t=>t.id===c.templateId)||{}).name||"",c.note,c.status,c.createdAt,c.lastSentAt]);
-  const csv=[cols.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n");
-  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);a.download="reviewflow-clienti.csv";a.click();URL.revokeObjectURL(a.href);
-}
-$("#exportCsv").onclick=exportCsv;$("#exportCsvTop").onclick=exportCsv;
-$("#csvInput").addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const lines=reader.result.split(/\r?\n/).filter(Boolean);
-    if(lines.length<2)return toast("CSV vuoto");
-    const parse=line=>{const out=[];let cur="",q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'&&line[i+1]==='"'){cur+='"';i++;}else if(ch==='"')q=!q;else if(ch===','&&!q){out.push(cur);cur="";}else cur+=ch;}out.push(cur);return out;};
-    const head=parse(lines[0]).map(x=>x.trim().toLowerCase());
-    const idx=n=>head.indexOf(n);
-    let count=0;
-    lines.slice(1).forEach(line=>{
-      const r=parse(line); const email=r[idx("email")]||""; if(!email)return;
-      const templateName=r[idx("template")]||"";
-      const tpl=state.templates.find(t=>t.name.toLowerCase()===templateName.toLowerCase())||state.templates[0];
-      state.clients.push({
-        id:uid("cli"),name:r[idx("nome")]||"",email,company:r[idx("azienda")]||"",
-        reviewLink:r[idx("link_recensione")]||state.settings.defaultReviewLink||"",templateId:tpl.id,
-        note:r[idx("nota")]||"",status:r[idx("stato")]||"Non inviata",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),lastSentAt:null
-      });count++;
-    });
-    save();renderAll();toast(`${count} clienti importati`);
-  };
-  reader.readAsText(file);e.target.value="";
-});
-
-function renderAll(){renderStats();renderRecent();renderClients();renderTemplateOptions();loadSettings();}
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],uid=p=>p+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function save(){localStorage.setItem("rf_clients",JSON.stringify(state.clients));localStorage.setItem("rf_templates",JSON.stringify(state.templates));localStorage.setItem("rf_settings",JSON.stringify(state.settings));localStorage.setItem("rf_activities",JSON.stringify(state.activities));localStorage.setItem("rf_theme",state.theme)}
+function toast(x){const t=$("#toast");t.textContent=x;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+function go(v){["dashboard","clients","templates","settings"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));if(v==="clients")renderClients();if(v==="templates")renderTemplates();if(v==="settings")renderActivities()}
+$$(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+function applyTheme(){document.body.classList.toggle("dark",state.theme==="dark");$("#themeCheck").checked=state.theme==="dark";$("#themeBtn").textContent=state.theme==="dark"?"Modalità giorno":"Modalità notte"}
+$("#themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";save();applyTheme()};$("#themeCheck").onchange=e=>{state.theme=e.target.checked?"dark":"light";save();applyTheme()};
+function tpl(id){return state.templates.find(t=>t.id===id)||state.templates[0]}function fill(s,c){return s.replaceAll("{{nome}}",c.name||"Nome cliente").replaceAll("{{azienda}}",c.company||state.settings.defaultCompany||"la nostra attività").replaceAll("{{firma}}",state.settings.signature||"Il team").replaceAll("{{link_recensione}}",c.reviewLink||state.settings.defaultReviewLink||"[link recensione]")}
+function formData(){return{id:$("#clientId").value,name:$("#name").value.trim(),email:$("#email").value.trim(),phone:$("#phone").value.trim(),activityId:$("#activityId").value,company:$("#company").value.trim(),reminderDate:$("#reminderDate").value,templateId:$("#templateId").value,reminderTemplateId:$("#reminderTemplateId").value,reviewLink:$("#reviewLink").value.trim(),note:$("#note").value.trim()}}
+function updatePreview(){const c=formData(),t=tpl(c.templateId);$("#previewSubject").textContent=fill(t.subject,c);$("#previewBody").textContent=fill(t.body,c);$("#previewLink").href=c.reviewLink||"#"}
+["name","email","phone","company","reminderDate","templateId","reminderTemplateId","reviewLink","note"].forEach(id=>$("#"+id).addEventListener("input",updatePreview));
+function renderOptions(){const o=state.templates.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");$("#templateId").innerHTML=o;$("#reminderTemplateId").innerHTML=o;$("#activityId").innerHTML='<option value="">Nessuna</option>'+state.activities.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}
+$("#activityId").onchange=e=>{const a=state.activities.find(x=>x.id===e.target.value);if(a){$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;updatePreview()}};
+function resetForm(){$("#clientForm").reset();$("#clientId").value="";$("#company").value=state.settings.defaultCompany||"";$("#reviewLink").value=state.settings.defaultReviewLink||"";$("#templateId").value=state.templates[0]?.id||"";$("#reminderTemplateId").value=state.templates[1]?.id||state.templates[0]?.id||"";updatePreview()}
+$("#resetBtn").onclick=resetForm;$("#newBtn").onclick=()=>{go("dashboard");resetForm();$("#name").focus()};
+$("#clientForm").onsubmit=e=>{e.preventDefault();const c=formData();if(!c.name||!c.email||!c.reviewLink)return toast("Compila i campi obbligatori");if(state.clients.some(x=>x.email.toLowerCase()===c.email.toLowerCase()&&x.id!==c.id&&x.status!=="Archiviata"))return toast("Email già presente tra i clienti attivi");const now=new Date().toISOString();if(c.id){const i=state.clients.findIndex(x=>x.id===c.id);state.clients[i]={...state.clients[i],...c,updatedAt:now}}else state.clients.unshift({...c,id:uid("c"),status:"Non inviata",createdAt:now,updatedAt:now,lastSentAt:null});save();resetForm();renderAll();toast("Cliente salvato")};
+function mail(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId);return`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(fill(t.subject,c))}&body=${encodeURIComponent(fill(t.body,c))}`}
+function wa(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),p=(c.phone||"").replace(/\\D/g,"");return`https://wa.me/${p}?text=${encodeURIComponent(fill(t.body,c))}`}
+function touch(c,rem){c.status=rem?"Promemoria":"Inviata";c.lastSentAt=new Date().toISOString();save();renderAll()}
+$("#openEmail").onclick=()=>{const c=formData();if(!c.email)return toast("Inserisci l’email");location.href=mail(c,false)};$("#copyText").onclick=async()=>{await navigator.clipboard.writeText(fill(tpl($("#templateId").value).body,formData()));toast("Testo copiato")};
+function dateIt(x){return x?new Date(x).toLocaleDateString("it-IT"):"—"}function days(x){return x?Math.floor((Date.now()-new Date(x).getTime())/86400000):null}
+function isDue(c){if(!c.reminderDate||["Completata","Archiviata"].includes(c.status))return false;const t=new Date();t.setHours(0,0,0,0);return new Date(c.reminderDate+"T00:00:00")<=t}
+function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table"><table><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span></td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${c.lastSentAt?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="actions"><button class="mini" onclick="editClient('${c.id}')">Modifica</button><button class="mini" onclick="duplicateClient('${c.id}')">Duplica</button><button class="mini" onclick="sendEmail('${c.id}',false)">Email</button><button class="mini" onclick="sendWhatsApp('${c.id}',false)">WhatsApp</button><button class="mini" onclick="sendEmail('${c.id}',true)">Promemoria</button><button class="mini" onclick="completeClient('${c.id}')">Completa</button><button class="mini" onclick="archiveClient('${c.id}')">${c.status==="Archiviata"?"Ripristina":"Archivia"}</button><button class="mini" onclick="removeClient('${c.id}')">Elimina</button></div></td></tr>`).join("")}</tbody></table></div>`}
+function renderClients(){const q=$("#search").value.toLowerCase(),s=$("#statusFilter").value,d=$("#dueFilter").value,t=new Date();t.setHours(0,0,0,0);const rows=state.clients.filter(c=>{const h=[c.name,c.email,c.phone,c.company,c.note].join(" ").toLowerCase();let ok=!q||h.includes(q);ok=ok&&(!s||c.status===s);if(d==="due")ok=ok&&isDue(c);if(d==="future")ok=ok&&c.reminderDate&&new Date(c.reminderDate+"T00:00:00")>t;if(d==="none")ok=ok&&!c.reminderDate;return ok});$("#clientTable").innerHTML=table(rows)}
+$("#search").oninput=renderClients;$("#statusFilter").onchange=renderClients;$("#dueFilter").onchange=renderClients;
+window.editClient=id=>{const c=state.clients.find(x=>x.id===id);go("dashboard");Object.entries({clientId:c.id,name:c.name,email:c.email,phone:c.phone||"",activityId:c.activityId||"",company:c.company||"",reminderDate:c.reminderDate||"",templateId:c.templateId,reminderTemplateId:c.reminderTemplateId||c.templateId,reviewLink:c.reviewLink,note:c.note||""}).forEach(([k,v])=>$("#"+k).value=v);updatePreview()};
+window.duplicateClient=id=>{const c=state.clients.find(x=>x.id===id),n={...c,id:uid("c"),name:c.name+" - copia",email:"",status:"Non inviata",lastSentAt:null,createdAt:new Date().toISOString()};state.clients.unshift(n);save();renderAll();editClient(n.id);toast("Cliente duplicato")};
+window.sendEmail=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem);location.href=mail(c,rem)};window.sendWhatsApp=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem);window.open(wa(c,rem),"_blank")};
+window.completeClient=id=>{const c=state.clients.find(x=>x.id===id);c.status="Completata";save();renderAll()};window.archiveClient=id=>{const c=state.clients.find(x=>x.id===id);c.status=c.status==="Archiviata"?"Non inviata":"Archiviata";save();renderAll()};window.removeClient=id=>{if(confirm("Eliminare il cliente?")){state.clients=state.clients.filter(x=>x.id!==id);save();renderAll()}};
+function renderStats(){$("#sTotal").textContent=state.clients.length;$("#sSent").textContent=state.clients.filter(c=>["Inviata","Promemoria","Completata"].includes(c.status)).length;$("#sDue").textContent=state.clients.filter(isDue).length;$("#sDone").textContent=state.clients.filter(c=>c.status==="Completata").length;$("#recent").innerHTML=table(state.clients.slice(0,5))}
+function renderTemplates(){$("#templateList").innerHTML=state.templates.map(t=>`<div class="item"><div><strong>${esc(t.name)}</strong><div class="muted">${esc(t.subject)}</div></div><button class="btn" onclick="editTemplate('${t.id}')">Modifica</button></div>`).join("");if(!$("#tplId").value&&state.templates[0])editTemplate(state.templates[0].id)}
+window.editTemplate=id=>{const t=tpl(id);$("#tplId").value=t.id;$("#tplName").value=t.name;$("#tplSubject").value=t.subject;$("#tplBody").value=t.body};$("#newTemplate").onclick=()=>{$("#templateForm").reset();$("#tplId").value=""};
+$("#templateForm").onsubmit=e=>{e.preventDefault();const t={id:$("#tplId").value||uid("t"),name:$("#tplName").value.trim(),subject:$("#tplSubject").value.trim(),body:$("#tplBody").value.trim()},i=state.templates.findIndex(x=>x.id===t.id);if(i>=0)state.templates[i]=t;else state.templates.push(t);save();renderAll();editTemplate(t.id);toast("Template salvato")};
+$("#tplDelete").onclick=()=>{const id=$("#tplId").value;if(state.templates.length<=1)return toast("Mantieni almeno un template");if(confirm("Eliminare il template?")){state.templates=state.templates.filter(x=>x.id!==id);save();$("#templateForm").reset();renderAll()}};
+$("#tplExport").onclick=()=>{const t=tpl($("#tplId").value),b=new Blob([JSON.stringify({type:"reviewflow-template",template:t},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="template-"+t.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")+".json";a.click();URL.revokeObjectURL(a.href)};
+function renderActivities(){$("#activityList").innerHTML=state.activities.length?state.activities.map(a=>`<div class="item"><div><strong>${esc(a.name)}</strong><div class="muted">${esc(a.reviewLink)}</div></div><div class="actions"><button class="btn" onclick="useActivity('${a.id}')">Usa</button><button class="btn danger" onclick="removeActivity('${a.id}')">Elimina</button></div></div>`).join(""):'<div class="empty">Nessuna attività salvata.</div>'}
+$("#activitySave").onclick=()=>{const n=$("#activityName").value.trim(),l=$("#activityLink").value.trim();if(!n||!l)return toast("Inserisci nome e link");const e=state.activities.find(a=>a.name.toLowerCase()===n.toLowerCase());if(e)e.reviewLink=l;else state.activities.push({id:uid("a"),name:n,reviewLink:l});save();$("#activityName").value="";$("#activityLink").value="";renderAll()};
+window.useActivity=id=>{const a=state.activities.find(x=>x.id===id);go("dashboard");$("#activityId").value=a.id;$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;updatePreview()};window.removeActivity=id=>{if(confirm("Eliminare l’attività?")){state.activities=state.activities.filter(x=>x.id!==id);save();renderAll()}};
+$("#settingsForm").onsubmit=e=>{e.preventDefault();state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim()};save();toast("Impostazioni salvate")};
+function loadSettings(){$("#signature").value=state.settings.signature||"";$("#defaultCompany").value=state.settings.defaultCompany||"";$("#defaultReviewLink").value=state.settings.defaultReviewLink||""}
+function download(name,content,type){const b=new Blob([content],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"1.2",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,theme:state.theme},null,2),"application/json");
+$("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.clients)||!Array.isArray(d.templates))throw 0;if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.theme=d.theme==="dark"?"dark":"light";save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
+function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}$("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\\n"),"text/csv")};
+$("#csvIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const lines=r.result.split(/\\r?\\n/).filter(Boolean),parse=l=>{let a=[],c="",q=false;for(let i=0;i<l.length;i++){let ch=l[i];if(ch=='"'&&l[i+1]=='"'){c+='"';i++}else if(ch=='"')q=!q;else if(ch==","&&!q){a.push(c);c=""}else c+=ch}a.push(c);return a},h=parse(lines[0]).map(x=>x.toLowerCase()),ix=x=>h.indexOf(x);lines.slice(1).forEach(l=>{const a=parse(l),email=a[ix("email")]||"";if(!email)return;state.clients.push({id:uid("c"),name:a[ix("nome")]||"",email,phone:a[ix("telefono")]||"",company:a[ix("azienda")]||"",reviewLink:a[ix("link_recensione")]||"",templateId:state.templates[0].id,reminderTemplateId:state.templates[1]?.id||state.templates[0].id,reminderDate:a[ix("data_promemoria")]||"",note:a[ix("nota")]||"",status:a[ix("stato")]||"Non inviata",lastSentAt:a[ix("ultimo_invio")]||null,createdAt:new Date().toISOString()})});save();renderAll();toast("CSV importato")};r.readAsText(f);e.target.value=""};
+$("#clearAll").onclick=()=>{if($("#deleteWord").value.trim()!=="CANCELLA")return toast("Scrivi CANCELLA");if(confirm("Cancellare definitivamente tutti i dati?")){["rf_clients","rf_templates","rf_settings","rf_activities","rf_theme"].forEach(localStorage.removeItem.bind(localStorage));location.reload()}};
+function renderAll(){renderOptions();renderStats();renderClients();renderTemplates();renderActivities();loadSettings();applyTheme()}
 renderAll();resetForm();
 </script>
-</body>
-</html>
+</body></html>
