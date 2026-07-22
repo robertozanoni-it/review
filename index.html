@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReviewFlow 2.6 Standalone</title>
+<title>ReviewFlow 2.7 Standalone</title>
 <style>
 :root{
   --bg:#f5f7fb;--panel:#fff;--panel2:#f8fafc;--text:#182230;--muted:#667085;
@@ -1488,23 +1488,55 @@ const DEF=[
 {id:"general",name:"Generale",subject:"Ti va di lasciare una recensione?",body:"Ciao {{nome}},\n\ngrazie per aver scelto {{azienda}}.\n\nLa tua opinione è importante e può aiutare altre persone a scegliere con maggiore fiducia.\n\nGrazie,\n{{firma}}"},
 {id:"reminder",name:"Promemoria",subject:"Promemoria recensione",body:"Ciao {{nome}},\n\nsolo un piccolo promemoria. Se hai un minuto, puoi lasciare la tua recensione usando il pulsante qui sotto.\n\nGrazie,\n{{firma}}"}
 ];
+function readStorage(key,fallback){
+  try{
+    const raw=localStorage.getItem(key);
+    if(raw===null)return fallback;
+    const parsed=JSON.parse(raw);
+    return parsed;
+  }catch(error){
+    console.warn("Dati locali non validi:",key,error);
+    return fallback;
+  }
+}
 const state={
-clients:JSON.parse(localStorage.getItem("rf2_clients")||"[]"),
-templates:JSON.parse(localStorage.getItem("rf2_templates")||"null")||DEF,
-settings:JSON.parse(localStorage.getItem("rf2_settings")||'{"signature":"","defaultCompany":"","defaultReviewLink":"","theme":"auto"}'),
-activities:JSON.parse(localStorage.getItem("rf2_activities")||"[]"),
-timeline:JSON.parse(localStorage.getItem("rf2_timeline")||"[]")
+clients:readStorage("rf2_clients",[]),
+templates:readStorage("rf2_templates",null)||DEF.map(x=>({...x})),
+settings:readStorage("rf2_settings",{"signature":"","defaultCompany":"","defaultReviewLink":"","theme":"auto"}),
+activities:readStorage("rf2_activities",[]),
+timeline:readStorage("rf2_timeline",[])
 };
+if(!Array.isArray(state.clients))state.clients=[];
+if(!Array.isArray(state.templates)||!state.templates.length)state.templates=DEF.map(x=>({...x}));
+if(!state.settings||typeof state.settings!=="object")state.settings={"signature":"","defaultCompany":"","defaultReviewLink":"","theme":"auto"};
+if(!Array.isArray(state.activities))state.activities=[];
+if(!Array.isArray(state.timeline))state.timeline=[];
 let lastSavedId=null;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],uid=p=>p+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-function save(){localStorage.setItem("rf2_clients",JSON.stringify(state.clients));localStorage.setItem("rf2_templates",JSON.stringify(state.templates));localStorage.setItem("rf2_settings",JSON.stringify(state.settings));localStorage.setItem("rf2_activities",JSON.stringify(state.activities));localStorage.setItem("rf2_timeline",JSON.stringify(state.timeline))}
+function save(){
+  try{
+    localStorage.setItem("rf2_clients",JSON.stringify(state.clients));
+    localStorage.setItem("rf2_templates",JSON.stringify(state.templates));
+    localStorage.setItem("rf2_settings",JSON.stringify(state.settings));
+    localStorage.setItem("rf2_activities",JSON.stringify(state.activities));
+    localStorage.setItem("rf2_timeline",JSON.stringify(state.timeline));
+    return true;
+  }catch(error){
+    console.error("Salvataggio non riuscito",error);
+    toast("Spazio locale esaurito: esporta un backup");
+    return false;
+  }
+}
 function toast(x){const t=$("#toast");t.textContent=x;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
 function go(v){["dashboard","clients","templates","settings"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));if(v==="clients")renderClients();if(v==="templates")renderTemplates();if(v==="settings")renderActivities()}
 $$(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
 function resolvedTheme(){if(state.settings.theme==="auto")return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";return state.settings.theme}
 function applyTheme(){document.body.classList.toggle("dark",resolvedTheme()==="dark");$("#themeSelect").value=state.settings.theme||"auto";$("#themeBtn").textContent="Tema: "+(state.settings.theme==="auto"?"auto":state.settings.theme==="dark"?"notte":"giorno")}
-$("#themeBtn").onclick=()=>{const cycle={auto:"light",light:"dark",dark:"auto"};state.settings.theme=cycle[state.settings.theme||"auto"];save();applyTheme()};matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
+$("#themeBtn").onclick=()=>{const cycle={auto:"light",light:"dark",dark:"auto"};state.settings.theme=cycle[state.settings.theme||"auto"];save();applyTheme()};
+const themeMedia=matchMedia("(prefers-color-scheme: dark)");
+if(themeMedia.addEventListener)themeMedia.addEventListener("change",applyTheme);
+else if(themeMedia.addListener)themeMedia.addListener(applyTheme);
 function tpl(id){return state.templates.find(t=>t.id===id)||state.templates[0]}
 function fill(s,c){return String(s||"").replaceAll("\\n","\n").replaceAll("{{nome}}",c.name||"Nome cliente").replaceAll("{{azienda}}",c.company||state.settings.defaultCompany||"la nostra attività").replaceAll("{{firma}}",state.settings.signature||"Il team").replaceAll("{{link_recensione}}","")}
 function formData(){return{id:$("#clientId").value,name:$("#name").value.trim(),email:$("#email").value.trim(),phone:$("#phone").value.trim(),activityId:$("#activityId").value,company:$("#company").value.trim(),reminderDate:$("#reminderDate").value,templateId:$("#templateId").value,reminderTemplateId:$("#reminderTemplateId").value,reviewLink:$("#reviewLink").value.trim(),note:$("#note").value.trim()}}
@@ -1519,6 +1551,27 @@ $("#clientForm").onsubmit=e=>{e.preventDefault();const c=formData();if(!c.name||
 
 function mailHref(c,rem=false){ return mail(c,rem); }
 function whatsappHref(c,rem=false){ return wa(c,rem); }
+async function copyToClipboard(text){
+  const value=String(text??"");
+  try{
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  }catch(error){console.warn("Clipboard API non disponibile",error)}
+  const area=document.createElement("textarea");
+  area.value=value;
+  area.setAttribute("readonly","");
+  area.style.position="fixed";
+  area.style.opacity="0";
+  document.body.appendChild(area);
+  area.select();
+  area.setSelectionRange(0,area.value.length);
+  let ok=false;
+  try{ok=document.execCommand("copy")}catch(error){console.warn(error)}
+  area.remove();
+  return ok;
+}
 function mail(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),body=fill(t.body,c)+"\n\n"+c.reviewLink;return`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(fill(t.subject,c))}&body=${encodeURIComponent(body)}`}
 function wa(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),body=fill(t.body,c)+"\n\n"+c.reviewLink,p=(c.phone||"").replace(/\D/g,"");return`https://wa.me/${p}?text=${encodeURIComponent(body)}`}
 function touch(c,rem,channel){c.status=rem?"Promemoria":"Inviata";c.lastSentAt=new Date().toISOString();addTimeline(c.id,rem?"Promemoria":"Invio",channel);save();renderAll()}
@@ -1527,11 +1580,22 @@ window.markSent=(id,rem,channel)=>{
   if(c)touch(c,rem,channel);
 };
 
-$("#openEmail").onclick=()=>{const c=formData();if(!c.email)return toast("Inserisci l’email");window.location.assign(mail(c,false))};$("#copyText").onclick=async()=>{await navigator.clipboard.writeText(fill(tpl($("#templateId").value).body,formData()));toast("Testo copiato")};
-$("#postEmail").onclick=()=>lastSavedId&&sendEmail(lastSavedId,false);$("#postWhatsApp").onclick=()=>lastSavedId&&sendWhatsApp(lastSavedId,false);$("#postCopy").onclick=async()=>{const c=state.clients.find(x=>x.id===lastSavedId);if(c){await navigator.clipboard.writeText(c.reviewLink);toast("Link copiato")}};$("#postQr").onclick=()=>lastSavedId&&showQr(lastSavedId);
-function dateIt(x){return x?new Date(x).toLocaleDateString("it-IT"):"—"}function days(x){return x?Math.floor((Date.now()-new Date(x).getTime())/86400000):null}
+$("#openEmail").onclick=()=>{const c=formData();if(!validEmail(c.email))return toast("Inserisci un’email valida");window.location.href=mail(c,false)};
+$("#copyText").onclick=async()=>{const ok=await copyToClipboard(fill(tpl($("#templateId").value).body,formData()));toast(ok?"Testo copiato":"Copia non riuscita")};
+$("#postEmail").onclick=()=>lastSavedId&&sendEmail(lastSavedId,false);$("#postWhatsApp").onclick=()=>lastSavedId&&sendWhatsApp(lastSavedId,false);$("#postCopy").onclick=async()=>{const c=state.clients.find(x=>x.id===lastSavedId);if(c){const ok=await copyToClipboard(c.reviewLink);toast(ok?"Link copiato":"Copia non riuscita")}};$("#postQr").onclick=()=>lastSavedId&&showQr(lastSavedId);
+function validEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||"").trim())}
+function dateIt(x){
+  if(!x)return"—";
+  const d=new Date(x);
+  return Number.isNaN(d.getTime())?"—":d.toLocaleDateString("it-IT");
+}
+function days(x){
+  if(!x)return null;
+  const d=new Date(x);
+  return Number.isNaN(d.getTime())?null:Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));
+}
 function isDue(c){if(!c.reminderDate||["Completata","Archiviata"].includes(c.status))return false;const t=new Date();t.setHours(0,0,0,0);return new Date(c.reminderDate+"T00:00:00")<=t}
-function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span></td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${c.lastSentAt?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="row-actions">
+function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span></td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${days(c.lastSentAt)!==null?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="row-actions">
 <button type="button" class="mini" data-action="edit" data-id="${c.id}">Modifica</button>
 <button type="button" class="mini" data-action="duplicate" data-id="${c.id}">Duplica</button>
 <button type="button" class="mini" data-action="email" data-id="${c.id}">Email</button>
@@ -1572,17 +1636,20 @@ function bindClientActions(){
           case "edit": editClient(id); break;
           case "duplicate": duplicateClient(id); break;
           case "email":
+            if(!validEmail(client.email)){toast("Email cliente non valida");return}
+            window.location.href=mail(client,false);
             touch(client,false,"Email");
-            setTimeout(()=>{ window.location.href=mail(client,false); },20);
             break;
           case "whatsapp":
             if(!client.phone){toast("Numero WhatsApp mancante");return}
-            touch(client,false,"WhatsApp");
-            window.open(wa(client,false),"_blank");
+            const waWindow=window.open(wa(client,false),"_blank","noopener");
+            if(!waWindow)toast("Consenti l’apertura delle finestre per WhatsApp");
+            else touch(client,false,"WhatsApp");
             break;
           case "reminder":
+            if(!validEmail(client.email)){toast("Email cliente non valida");return}
+            window.location.href=mail(client,true);
             touch(client,true,"Email");
-            setTimeout(()=>{ window.location.href=mail(client,true); },20);
             break;
           case "timeline": showTimeline(id); break;
           case "qr": showQr(id); break;
@@ -1619,9 +1686,18 @@ $("#activitySave").onclick=()=>{const n=$("#activityName").value.trim(),l=$("#ac
 window.useActivity=id=>{const a=state.activities.find(x=>x.id===id);go("dashboard");$("#activityId").value=a.id;$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;const d=new Date();d.setDate(d.getDate()+(a.reminderDays||7));$("#reminderDate").value=d.toISOString().slice(0,10);updatePreview()};window.removeActivity=id=>{if(confirm("Eliminare l’attività?")){state.activities=state.activities.filter(x=>x.id!==id);save();renderAll()}};
 $("#settingsForm").onsubmit=e=>{e.preventDefault();state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim(),theme:$("#themeSelect").value};save();applyTheme();toast("Impostazioni salvate")};
 function loadSettings(){$("#signature").value=state.settings.signature||"";$("#defaultCompany").value=state.settings.defaultCompany||"";$("#defaultReviewLink").value=state.settings.defaultReviewLink||"";$("#themeSelect").value=state.settings.theme||"auto"}
-function download(name,content,type){const b=new Blob([content],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
-$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.6-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
-$("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.clients)||!Array.isArray(d.templates))throw 0;if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
+function download(name,content,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.7-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
+$("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||d.app!=="ReviewFlow"||!Array.isArray(d.clients)||!Array.isArray(d.templates)||!d.templates.length)throw new Error("Formato backup non riconosciuto");if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
 function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}
 $("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
 
@@ -1631,19 +1707,29 @@ function normalizeHeader(v){
     .replace(/\s+/g,"_");
 }
 function parseCsvText(text){
-  const lines=text.split(/\r?\n/).filter(line=>line.trim()!=="");
-  const parse=line=>{
-    const out=[];let cur="",quoted=false;
-    for(let i=0;i<line.length;i++){
-      const ch=line[i];
-      if(ch==='"'&&line[i+1]==='"'){cur+='"';i++}
-      else if(ch==='"')quoted=!quoted;
-      else if((ch===","||ch===";")&&!quoted){out.push(cur);cur=""}
-      else cur+=ch;
-    }
-    out.push(cur);return out;
-  };
-  return lines.map(parse);
+  const source=String(text||"").replace(/^\uFEFF/,"");
+  const firstLine=(source.split(/\r?\n/,1)[0]||"");
+  const comma=(firstLine.match(/,/g)||[]).length;
+  const semicolon=(firstLine.match(/;/g)||[]).length;
+  const delimiter=semicolon>comma?";":",";
+  const rows=[];let row=[],cell="",quoted=false;
+  for(let i=0;i<source.length;i++){
+    const ch=source[i];
+    if(ch==='"'){
+      if(quoted&&source[i+1]==='"'){cell+='"';i++}
+      else quoted=!quoted;
+    }else if(ch===delimiter&&!quoted){
+      row.push(cell);cell="";
+    }else if((ch==="\n"||ch==="\r")&&!quoted){
+      if(ch==="\r"&&source[i+1]==="\n")i++;
+      row.push(cell);
+      if(row.some(v=>String(v).trim()!==""))rows.push(row);
+      row=[];cell="";
+    }else cell+=ch;
+  }
+  row.push(cell);
+  if(row.some(v=>String(v).trim()!==""))rows.push(row);
+  return rows;
 }
 async function parseXlsxFile(file){
   const zip=await JSZip.loadAsync(await file.arrayBuffer());
@@ -1731,8 +1817,8 @@ function rowsToClients(rows,fileName){
   let imported=0,duplicates=0,invalid=0;
   rows.slice(1).forEach(row=>{
     const email=String(row[idx.email]??"").trim();
-    if(!email){invalid++;return}
-    if(state.clients.some(c=>c.email.toLowerCase()===email.toLowerCase()&&c.status!=="Archiviata")){
+    if(!email||!validEmail(email)){invalid++;return}
+    if(state.clients.some(c=>String(c.email||"").toLowerCase()===email.toLowerCase())){
       duplicates++;return;
     }
     const name=idx.nome>=0?String(row[idx.nome]??"").trim():"";
