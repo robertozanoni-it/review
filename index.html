@@ -1,153 +1,1571 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReviewFlow 1.2</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReviewFlow 2.1 Standalone</title>
 <style>
-:root{--bg:#f5f7fb;--panel:#fff;--text:#182230;--muted:#667085;--line:#e4e7ec;--primary:#3157d5;--danger:#b42318;--shadow:0 12px 32px rgba(16,24,40,.08)}
-body.dark{--bg:#0f172a;--panel:#111827;--text:#f8fafc;--muted:#94a3b8;--line:#334155;--primary:#6d8cff;--danger:#f87171}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}button,input,textarea,select{font:inherit}button{cursor:pointer}
-.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}aside{background:#111827;color:white;padding:22px;position:sticky;top:0;height:100vh}.brand{font-size:22px;font-weight:800}.sub{color:#aab3c5;font-size:12px;margin:6px 0 24px}.nav{display:grid;gap:8px}.nav button{border:0;background:transparent;color:#cbd5e1;text-align:left;padding:12px;border-radius:10px}.nav button.active,.nav button:hover{background:#263246;color:white}
-main{padding:26px;max-width:1500px;width:100%;margin:auto}.top{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:20px}.top h1{margin:0}.muted{color:var(--muted)}
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 13px;border-radius:10px;font-weight:700}.btn.primary{background:var(--primary);border-color:var(--primary);color:white}.btn.danger{color:var(--danger)}
-.grid{display:grid;gap:18px}.stats{grid-template-columns:repeat(4,1fr);margin-bottom:20px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px}.stat .n{font-size:30px;font-weight:850;margin-top:8px}.stat .l{font-size:12px;font-weight:800;color:var(--muted)}
-.two{grid-template-columns:1fr 1fr}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}.field{display:grid;gap:6px}label{font-size:13px;font-weight:750}input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}textarea{min-height:170px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.preview{white-space:pre-wrap;line-height:1.6;border:1px solid var(--line);padding:18px;border-radius:12px;min-height:320px}.preview strong{display:block;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}.review-btn{display:inline-block;background:var(--primary);color:white;text-decoration:none;padding:11px 15px;border-radius:9px;font-weight:800;margin-top:14px}
-.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase}.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;color:#3538cd;font-size:12px;font-weight:800}.overdue{background:rgba(181,71,8,.08)}.archived{opacity:.65}.actions{display:flex;gap:6px;flex-wrap:wrap}.mini{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
-.hidden{display:none!important}.list{display:grid;gap:10px}.item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}.empty{text-align:center;padding:28px;color:var(--muted)}.dangerzone{border:1px solid rgba(180,35,24,.35);padding:15px;border-radius:12px;background:rgba(180,35,24,.04)}.toast{position:fixed;right:20px;bottom:20px;background:#101828;color:white;padding:12px 15px;border-radius:10px;opacity:0;transform:translateY(10px);transition:.2s}.toast.show{opacity:1;transform:none}
-@media(max-width:900px){.app{grid-template-columns:1fr}aside{height:auto;position:relative}.nav{grid-template-columns:repeat(4,1fr)}.nav button{text-align:center}.stats,.two{grid-template-columns:1fr 1fr}}
-@media(max-width:680px){main{padding:16px}.stats,.two,.form{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start;flex-direction:column}.nav{grid-template-columns:1fr 1fr}}
+:root{
+  --bg:#f5f7fb;--panel:#fff;--panel2:#f8fafc;--text:#182230;--muted:#667085;
+  --line:#e4e7ec;--primary:#3157d5;--primary2:#2446b6;--danger:#b42318;
+  --success:#087a55;--warn:#b54708;--shadow:0 12px 32px rgba(16,24,40,.08);
+  --radius:16px
+}
+body.dark{
+  --bg:#0f172a;--panel:#111827;--panel2:#0b1220;--text:#f8fafc;--muted:#94a3b8;
+  --line:#334155;--primary:#6d8cff;--primary2:#5674e8;--danger:#f87171;
+  --success:#34d399;--warn:#f59e0b;--shadow:0 12px 32px rgba(0,0,0,.28)
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+aside{background:#111827;color:#fff;padding:20px;position:sticky;top:0;height:100vh}
+.brand{font-size:22px;font-weight:850}.brand-sub{font-size:12px;color:#aab3c5;margin:6px 0 24px}
+.nav{display:grid;gap:8px}
+.nav button{display:flex;align-items:center;gap:10px;border:0;background:transparent;color:#cbd5e1;text-align:left;padding:11px 12px;border-radius:10px}
+.nav button.active,.nav button:hover{background:#263246;color:#fff}
+.icon{width:18px;text-align:center}
+main{padding:24px;max-width:1500px;width:100%;margin:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.top h1{margin:0;font-size:30px}.muted{color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 13px;border-radius:10px;font-weight:750}
+.btn:hover{filter:brightness(.98)}.btn.primary{background:var(--primary);border-color:var(--primary);color:white}.btn.primary:hover{background:var(--primary2)}
+.btn.danger{color:var(--danger)}.btn.success{color:var(--success)}
+.grid{display:grid;gap:18px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.stat .label{font-size:12px;font-weight:800;color:var(--muted)}.stat .value{font-size:30px;font-weight:850;margin:8px 0 4px}.stat .hint{font-size:12px;color:var(--muted)}
+.two{grid-template-columns:380px minmax(0,1fr)}
+.field{display:grid;gap:6px}.field+.field{margin-top:12px}label{font-size:13px;font-weight:750}
+input,textarea,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);outline:none}
+input:focus,textarea:focus,select:focus{border-color:#7f9cf5;box-shadow:0 0 0 3px rgba(49,87,213,.12)}
+textarea{min-height:150px;resize:vertical}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.preview{border:1px solid var(--line);border-radius:12px;padding:18px;min-height:330px;background:var(--panel2)}
+.preview-subject{font-weight:850;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}
+.preview-body{white-space:pre-wrap;line-height:1.65}.review-btn{display:inline-block;background:var(--primary);color:#fff;text-decoration:none;padding:12px 16px;border-radius:9px;font-weight:850;margin-top:16px}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:1100px}.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.table th{font-size:11px;color:var(--muted);text-transform:uppercase}.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mini{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text)}
+.badge{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#eef2ff;color:#3538cd;font-size:12px;font-weight:800}
+body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,71,8,.08)}.archived{opacity:.65}
+.hidden{display:none!important}.empty{text-align:center;padding:30px;color:var(--muted)}
+.quick-success{border:1px solid rgba(8,122,85,.35);background:rgba(8,122,85,.06);padding:16px;border-radius:12px}
+.quick-success h3{margin:0 0 6px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tab{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 12px;border-radius:9px;font-weight:750}.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(260px,1fr));gap:14px;overflow:auto}.kanban-col{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:380px}.kanban-col h3{margin:0 0 12px}.kanban-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}.kanban-card strong{display:block}.kanban-card small{color:var(--muted)}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.calendar-head{font-size:12px;font-weight:800;color:var(--muted);text-align:center}.day{min-height:110px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--panel2)}.day .num{font-size:12px;font-weight:800}.event{margin-top:6px;padding:6px;border-radius:7px;background:rgba(49,87,213,.12);font-size:11px;line-height:1.35}
+.dropzone{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;background:var(--panel2);transition:.2s}.dropzone.drag{border-color:var(--primary);background:rgba(49,87,213,.08)}
+.list{display:grid;gap:10px}.item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:720px;width:100%;max-height:88vh;overflow:auto}
+.timeline{border-left:2px solid var(--line);margin-left:8px;padding-left:18px}.timeline-item{position:relative;margin-bottom:16px}.timeline-item:before{content:"";position:absolute;left:-24px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.qr-wrap{display:grid;place-items:center;background:#fff;padding:16px;border-radius:12px}.qr-wrap img{width:220px;height:220px}
+.toast{position:fixed;right:20px;bottom:20px;background:#101828;color:#fff;padding:12px 15px;border-radius:10px;opacity:0;transform:translateY(10px);transition:.2s;z-index:100}.toast.show{opacity:1;transform:none}
+.dangerzone{border:1px solid rgba(180,35,24,.35);padding:15px;border-radius:12px;background:rgba(180,35,24,.04)}
+@media(max-width:980px){.app{grid-template-columns:1fr}aside{height:auto;position:relative}.nav{grid-template-columns:repeat(4,1fr)}.nav button{justify-content:center}.stats,.two{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){main{padding:16px}.stats,.two{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.nav{grid-template-columns:1fr 1fr}.calendar{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="app">
 <aside>
-  <div class="brand">ReviewFlow</div><div class="sub">Richieste recensioni semplificate</div>
+  <div class="brand">ReviewFlow</div>
+  <div class="brand-sub">Richieste recensioni semplificate</div>
   <div class="nav">
-    <button class="active" data-view="dashboard">Dashboard</button>
-    <button data-view="clients">Clienti</button>
-    <button data-view="templates">Template</button>
-    <button data-view="settings">Impostazioni</button>
+    <button class="active" data-view="dashboard"><span class="icon">⌂</span>Dashboard</button>
+    <button data-view="clients"><span class="icon">👥</span>Clienti</button>
+    <button data-view="templates"><span class="icon">✉</span>Template</button>
+    <button data-view="settings"><span class="icon">⚙</span>Impostazioni</button>
   </div>
 </aside>
 <main>
 <section id="dashboard">
-<div class="top"><div><h1>Dashboard</h1><div class="muted">Gestisci richieste, promemoria e recensioni.</div></div><div class="actions"><button class="btn" id="themeBtn">Modalità notte</button><button class="btn primary" id="newBtn">+ Nuovo cliente</button></div></div>
-<div class="grid stats">
-<div class="card stat"><div class="l">CLIENTI</div><div class="n" id="sTotal">0</div></div>
-<div class="card stat"><div class="l">EMAIL INVIATE</div><div class="n" id="sSent">0</div></div>
-<div class="card stat"><div class="l">DA RICONTATTARE</div><div class="n" id="sDue">0</div></div>
-<div class="card stat"><div class="l">COMPLETATE</div><div class="n" id="sDone">0</div></div>
-</div>
-<div class="grid two">
-<div class="card"><h2>Nuova richiesta</h2>
-<form id="clientForm">
-<input type="hidden" id="clientId">
-<div class="form">
-<div class="field"><label>Nome *</label><input id="name" required></div>
-<div class="field"><label>Email *</label><input id="email" type="email" required></div>
-<div class="field"><label>Telefono / WhatsApp</label><input id="phone"></div>
-<div class="field"><label>Attività salvata</label><select id="activityId"><option value="">Nessuna</option></select></div>
-<div class="field"><label>Azienda</label><input id="company"></div>
-<div class="field"><label>Data promemoria</label><input id="reminderDate" type="date"></div>
-<div class="field"><label>Template richiesta</label><select id="templateId"></select></div>
-<div class="field"><label>Template promemoria</label><select id="reminderTemplateId"></select></div>
-<div class="field full"><label>Link recensione *</label><input id="reviewLink" type="url" required></div>
-<div class="field full"><label>Nota interna</label><input id="note"></div>
-</div>
-<div class="toolbar"><button class="btn primary">Salva cliente</button><button class="btn" type="button" id="resetBtn">Svuota</button></div>
-</form>
-</div>
-<div class="card"><h2>Anteprima email</h2><div class="preview"><strong id="previewSubject"></strong><span id="previewBody"></span><br><a id="previewLink" class="review-btn" target="_blank">LASCIA UNA RECENSIONE</a></div><div class="toolbar"><button class="btn primary" id="openEmail" type="button">Apri email</button><button class="btn" id="copyText" type="button">Copia testo</button></div></div>
-</div>
-<div class="card" style="margin-top:18px"><h2>Clienti recenti</h2><div id="recent"></div></div>
+  <div class="top">
+    <div><h1>Dashboard</h1><div class="muted">Gestisci richieste, promemoria e recensioni.</div></div>
+    <div class="actions"><button class="btn" id="themeBtn">Tema: auto</button><button class="btn primary" id="newBtn">+ Nuovo cliente</button></div>
+  </div>
+
+  <div class="grid stats">
+    <div class="card stat"><div class="label">CLIENTI</div><div class="value" id="sTotal">0</div><div class="hint" id="hTotal">0 questa settimana</div></div>
+    <div class="card stat"><div class="label">EMAIL INVIATE</div><div class="value" id="sSent">0</div><div class="hint" id="hSent">0 questa settimana</div></div>
+    <div class="card stat"><div class="label">DA RICONTATTARE</div><div class="value" id="sDue">0</div><div class="hint" id="hDue">0 scaduti</div></div>
+    <div class="card stat"><div class="label">COMPLETATE</div><div class="value" id="sDone">0</div><div class="hint" id="hRate">Conversione 0%</div></div>
+  </div>
+
+  <div class="grid two">
+    <div class="card">
+      <h2>Nuova richiesta</h2>
+      <form id="clientForm">
+        <input type="hidden" id="clientId">
+        <div class="field"><label>Attività salvata</label><select id="activityId"><option value="">Nessuna</option></select></div>
+        <div class="field"><label>Nome *</label><input id="name" required></div>
+        <div class="field"><label>Email *</label><input id="email" type="email" required></div>
+        <div class="field"><label>Telefono / WhatsApp</label><input id="phone"></div>
+        <div class="field"><label>Azienda</label><input id="company"></div>
+        <div class="field"><label>Data promemoria</label><input id="reminderDate" type="date"></div>
+        <div class="field"><label>Template richiesta</label><select id="templateId"></select></div>
+        <div class="field"><label>Template promemoria</label><select id="reminderTemplateId"></select></div>
+        <div class="field"><label>Link recensione *</label><input id="reviewLink" type="url" required></div>
+        <div class="field"><label>Nota interna</label><input id="note"></div>
+        <div class="toolbar"><button class="btn primary">Salva cliente</button><button class="btn" type="button" id="resetBtn">Svuota</button></div>
+      </form>
+      <div id="postSave" class="quick-success hidden" style="margin-top:14px">
+        <h3>✓ Cliente salvato</h3>
+        <div class="muted">Scegli subito l’azione successiva.</div>
+        <div class="toolbar">
+          <button class="btn primary" id="postEmail">Invia email</button>
+          <button class="btn" id="postWhatsApp">Invia WhatsApp</button>
+          <button class="btn" id="postCopy">Copia link</button>
+          <button class="btn" id="postQr">QR Code</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Anteprima email</h2>
+      <div class="preview">
+        <div class="preview-subject" id="previewSubject"></div>
+        <div class="preview-body" id="previewBody"></div>
+        <a id="previewLink" class="review-btn" target="_blank">LASCIA UNA RECENSIONE</a>
+      </div>
+      <div class="toolbar"><button class="btn primary" id="openEmail" type="button">Apri email</button><button class="btn" id="copyText" type="button">Copia testo</button></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="tabs">
+      <button class="tab active" data-dash="recent">Recenti</button>
+      <button class="tab" data-dash="kanban">Kanban</button>
+      <button class="tab" data-dash="calendar">Calendario</button>
+    </div>
+    <div id="dashRecent"></div>
+    <div id="dashKanban" class="hidden"></div>
+    <div id="dashCalendar" class="hidden"></div>
+  </div>
 </section>
 
 <section id="clients" class="hidden">
-<div class="top"><div><h1>Clienti</h1><div class="muted">Gestione completa delle richieste.</div></div><div class="actions"><label class="btn" for="csvIn">Importa CSV</label><input class="hidden" id="csvIn" type="file" accept=".csv"><button class="btn" id="csvOut">Esporta CSV</button><button class="btn primary" data-go="dashboard">+ Nuovo</button></div></div>
-<div class="card"><div class="actions" style="margin-bottom:14px"><input id="search" placeholder="Cerca cliente"><select id="statusFilter"><option value="">Tutti gli stati</option><option>Non inviata</option><option>Inviata</option><option>Promemoria</option><option>Completata</option><option>Archiviata</option></select><select id="dueFilter"><option value="">Tutte le scadenze</option><option value="due">Da ricontattare</option><option value="future">Programmate</option><option value="none">Senza data</option></select></div><div id="clientTable"></div></div>
+  <div class="top">
+    <div><h1>Clienti</h1><div class="muted">Gestione completa delle richieste.</div></div>
+    <div class="actions"><button class="btn" id="csvOut">Esporta CSV</button><button class="btn primary" data-go="dashboard">+ Nuovo</button></div>
+  </div>
+  <div class="card">
+    <div id="dropzone" class="dropzone">Trascina qui un file CSV oppure clicca per selezionarlo<input id="csvIn" type="file" accept=".csv" class="hidden"></div>
+    <div class="actions" style="margin:14px 0"><input id="search" placeholder="Cerca cliente"><select id="statusFilter"><option value="">Tutti gli stati</option><option>Non inviata</option><option>Inviata</option><option>Promemoria</option><option>Completata</option><option>Archiviata</option></select><select id="dueFilter"><option value="">Tutte le scadenze</option><option value="due">Da ricontattare</option><option value="future">Programmate</option><option value="none">Senza data</option></select></div>
+    <div id="clientTable"></div>
+  </div>
 </section>
 
 <section id="templates" class="hidden">
-<div class="top"><div><h1>Template</h1><div class="muted">Crea testi diversi per richiesta e promemoria.</div></div><button class="btn primary" id="newTemplate">+ Nuovo template</button></div>
-<div class="grid two">
-<div class="card"><div id="templateList" class="list"></div></div>
-<div class="card"><form id="templateForm"><input type="hidden" id="tplId"><div class="field"><label>Nome</label><input id="tplName" required></div><div class="field"><label>Oggetto</label><input id="tplSubject" required></div><div class="field"><label>Testo</label><textarea id="tplBody" required></textarea><div class="muted">Variabili: {{nome}}, {{azienda}}, {{firma}}, {{link_recensione}}</div></div><div class="toolbar"><button class="btn primary">Salva</button><button class="btn" id="tplExport" type="button">Esporta template</button><button class="btn danger" id="tplDelete" type="button">Elimina</button></div></form></div>
-</div>
+  <div class="top"><div><h1>Template</h1><div class="muted">Crea testi diversi per richiesta e promemoria.</div></div><button class="btn primary" id="newTemplate">+ Nuovo template</button></div>
+  <div class="grid two">
+    <div class="card"><div id="templateList" class="list"></div></div>
+    <div class="card">
+      <form id="templateForm">
+        <input type="hidden" id="tplId">
+        <div class="field"><label>Nome</label><input id="tplName" required></div>
+        <div class="field"><label>Oggetto</label><input id="tplSubject" required></div>
+        <div class="field"><label>Testo</label><textarea id="tplBody" required></textarea><div class="muted">Variabili: {{nome}}, {{azienda}}, {{firma}}, {{link_recensione}}</div></div>
+        <div class="toolbar"><button class="btn primary">Salva</button><button class="btn" id="tplExport" type="button">Esporta template</button><button class="btn danger" id="tplDelete" type="button">Elimina</button></div>
+      </form>
+    </div>
+  </div>
 </section>
 
 <section id="settings" class="hidden">
-<div class="top"><div><h1>Impostazioni</h1><div class="muted">Dati predefiniti, attività e backup.</div></div></div>
-<div class="grid two">
-<div class="card"><h2>Dati predefiniti</h2><form id="settingsForm"><div class="field"><label>Firma</label><input id="signature"></div><div class="field"><label>Azienda predefinita</label><input id="defaultCompany"></div><div class="field"><label>Link recensione predefinito</label><input id="defaultReviewLink"></div><div class="toolbar"><button class="btn primary">Salva impostazioni</button></div></form><hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><label><input id="themeCheck" type="checkbox" style="width:auto"> Attiva modalità notte</label></div>
-<div class="card"><h2>Attività e link</h2><div class="field"><label>Nome attività</label><input id="activityName"></div><div class="field"><label>Link recensione</label><input id="activityLink"></div><div class="toolbar"><button class="btn primary" id="activitySave">Salva attività</button></div><div id="activityList" class="list" style="margin-top:14px"></div></div>
-<div class="card"><h2>Backup completo</h2><p class="muted">Include clienti, template, attività, impostazioni e tema.</p><div class="toolbar"><button class="btn" id="backupOut">Esporta backup</button><label class="btn" for="backupIn">Importa backup</label><input class="hidden" id="backupIn" type="file" accept=".json"></div></div>
-<div class="card"><h2>Area pericolosa</h2><div class="dangerzone"><p class="muted">Scrivi <strong>CANCELLA</strong> per eliminare tutti i dati.</p><input id="deleteWord" placeholder="CANCELLA"><div class="toolbar"><button class="btn danger" id="clearAll">Cancella tutti i dati</button></div></div></div>
-</div>
+  <div class="top"><div><h1>Impostazioni</h1><div class="muted">Dati predefiniti, attività, backup e installazione.</div></div></div>
+  <div class="grid two">
+    <div class="card"><h2>Dati predefiniti</h2><form id="settingsForm"><div class="field"><label>Firma</label><input id="signature"></div><div class="field"><label>Azienda predefinita</label><input id="defaultCompany"></div><div class="field"><label>Link recensione predefinito</label><input id="defaultReviewLink"></div><div class="field"><label>Tema</label><select id="themeSelect"><option value="auto">Automatico</option><option value="light">Giorno</option><option value="dark">Notte</option></select></div><div class="toolbar"><button class="btn primary">Salva impostazioni</button></div></form></div>
+    <div class="card"><h2>Attività e link</h2><div class="field"><label>Nome attività</label><input id="activityName"></div><div class="field"><label>Link recensione</label><input id="activityLink"></div><div class="field"><label>Giorni promemoria predefiniti</label><input id="activityReminderDays" type="number" min="0" value="7"></div><div class="toolbar"><button class="btn primary" id="activitySave">Salva attività</button></div><div id="activityList" class="list" style="margin-top:14px"></div></div>
+    <div class="card"><h2>Backup completo</h2><p class="muted">Include clienti, timeline, template, attività, impostazioni e tema.</p><div class="toolbar"><button class="btn" id="backupOut">Esporta backup</button><label class="btn" for="backupIn">Importa backup</label><input class="hidden" id="backupIn" type="file" accept=".json"></div></div>
+    <div class="card"><h2>Funzioni server</h2><p class="muted">SMTP diretto, sincronizzazione cloud e database condiviso richiedono un backend. Questa versione è un unico file HTML e mantiene i dati nel browser.</p><div class="toolbar"><button class="btn" disabled>Configura SMTP</button><button class="btn" disabled>Sincronizza cloud</button></div></div>
+    <div class="card"><h2>Area pericolosa</h2><div class="dangerzone"><p class="muted">Scrivi <strong>CANCELLA</strong> per eliminare tutti i dati.</p><input id="deleteWord" placeholder="CANCELLA"><div class="toolbar"><button class="btn danger" id="clearAll">Cancella tutti i dati</button></div></div></div>
+  </div>
 </section>
 </main>
 </div>
+
+<div class="modal hidden" id="modal"><div class="modal-card"><div class="top"><h2 id="modalTitle">Dettagli</h2><button class="btn" id="modalClose">Chiudi</button></div><div id="modalBody"></div></div></div>
 <div class="toast" id="toast"></div>
+
 <script>
+(function(global){const __mods={};const __cache={};
+__mods["index.js"]=function(module,exports,require){
+//---------------------------------------------------------------------
+// QRCode for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//   http://www.opensource.org/licenses/mit-license.php
+//
+// The word "QR Code" is registered trademark of 
+// DENSO WAVE INCORPORATED
+//   http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+// Modified to work in node for this project (and some refactoring)
+//---------------------------------------------------------------------
+
+var QR8bitByte = require('./QR8bitByte');
+var QRUtil = require('./QRUtil');
+var QRPolynomial = require('./QRPolynomial');
+var QRRSBlock = require('./QRRSBlock');
+var QRBitBuffer = require('./QRBitBuffer');
+
+function QRCode(typeNumber, errorCorrectLevel) {
+	this.typeNumber = typeNumber;
+	this.errorCorrectLevel = errorCorrectLevel;
+	this.modules = null;
+	this.moduleCount = 0;
+	this.dataCache = null;
+	this.dataList = [];
+}
+
+QRCode.prototype = {
+	
+	addData : function(data) {
+		var newData = new QR8bitByte(data);
+		this.dataList.push(newData);
+		this.dataCache = null;
+	},
+	
+	isDark : function(row, col) {
+		if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
+			throw new Error(row + "," + col);
+		}
+		return this.modules[row][col];
+	},
+
+	getModuleCount : function() {
+		return this.moduleCount;
+	},
+	
+	make : function() {
+		// Calculate automatically typeNumber if provided is < 1
+		if (this.typeNumber < 1 ){
+			var typeNumber = 1;
+			for (typeNumber = 1; typeNumber < 40; typeNumber++) {
+				var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+
+				var buffer = new QRBitBuffer();
+				var totalDataCount = 0;
+				for (var i = 0; i < rsBlocks.length; i++) {
+					totalDataCount += rsBlocks[i].dataCount;
+				}
+
+				for (var x = 0; x < this.dataList.length; x++) {
+					var data = this.dataList[x];
+					buffer.put(data.mode, 4);
+					buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+					data.write(buffer);
+				}
+				if (buffer.getLengthInBits() <= totalDataCount * 8)
+					break;
+			}
+			this.typeNumber = typeNumber;
+		}
+		this.makeImpl(false, this.getBestMaskPattern() );
+	},
+	
+	makeImpl : function(test, maskPattern) {
+		
+		this.moduleCount = this.typeNumber * 4 + 17;
+		this.modules = new Array(this.moduleCount);
+		
+		for (var row = 0; row < this.moduleCount; row++) {
+			
+			this.modules[row] = new Array(this.moduleCount);
+			
+			for (var col = 0; col < this.moduleCount; col++) {
+				this.modules[row][col] = null;//(col + row) % 3;
+			}
+		}
+	
+		this.setupPositionProbePattern(0, 0);
+		this.setupPositionProbePattern(this.moduleCount - 7, 0);
+		this.setupPositionProbePattern(0, this.moduleCount - 7);
+		this.setupPositionAdjustPattern();
+		this.setupTimingPattern();
+		this.setupTypeInfo(test, maskPattern);
+		
+		if (this.typeNumber >= 7) {
+			this.setupTypeNumber(test);
+		}
+	
+		if (this.dataCache === null) {
+			this.dataCache = QRCode.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+		}
+	
+		this.mapData(this.dataCache, maskPattern);
+	},
+
+	setupPositionProbePattern : function(row, col)  {
+		
+		for (var r = -1; r <= 7; r++) {
+			
+			if (row + r <= -1 || this.moduleCount <= row + r) continue;
+			
+			for (var c = -1; c <= 7; c++) {
+				
+				if (col + c <= -1 || this.moduleCount <= col + c) continue;
+				
+				if ( (0 <= r && r <= 6 && (c === 0 || c === 6) ) || 
+                     (0 <= c && c <= 6 && (r === 0 || r === 6) ) || 
+                     (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+					this.modules[row + r][col + c] = true;
+				} else {
+					this.modules[row + r][col + c] = false;
+				}
+			}		
+		}		
+	},
+	
+	getBestMaskPattern : function() {
+	
+		var minLostPoint = 0;
+		var pattern = 0;
+	
+		for (var i = 0; i < 8; i++) {
+			
+			this.makeImpl(true, i);
+	
+			var lostPoint = QRUtil.getLostPoint(this);
+	
+			if (i === 0 || minLostPoint >  lostPoint) {
+				minLostPoint = lostPoint;
+				pattern = i;
+			}
+		}
+	
+		return pattern;
+	},
+	
+	createMovieClip : function(target_mc, instance_name, depth) {
+	
+		var qr_mc = target_mc.createEmptyMovieClip(instance_name, depth);
+		var cs = 1;
+	
+		this.make();
+
+		for (var row = 0; row < this.modules.length; row++) {
+			
+			var y = row * cs;
+			
+			for (var col = 0; col < this.modules[row].length; col++) {
+	
+				var x = col * cs;
+				var dark = this.modules[row][col];
+			
+				if (dark) {
+					qr_mc.beginFill(0, 100);
+					qr_mc.moveTo(x, y);
+					qr_mc.lineTo(x + cs, y);
+					qr_mc.lineTo(x + cs, y + cs);
+					qr_mc.lineTo(x, y + cs);
+					qr_mc.endFill();
+				}
+			}
+		}
+		
+		return qr_mc;
+	},
+
+	setupTimingPattern : function() {
+		
+		for (var r = 8; r < this.moduleCount - 8; r++) {
+			if (this.modules[r][6] !== null) {
+				continue;
+			}
+			this.modules[r][6] = (r % 2 === 0);
+		}
+	
+		for (var c = 8; c < this.moduleCount - 8; c++) {
+			if (this.modules[6][c] !== null) {
+				continue;
+			}
+			this.modules[6][c] = (c % 2 === 0);
+		}
+	},
+	
+	setupPositionAdjustPattern : function() {
+	
+		var pos = QRUtil.getPatternPosition(this.typeNumber);
+		
+		for (var i = 0; i < pos.length; i++) {
+		
+			for (var j = 0; j < pos.length; j++) {
+			
+				var row = pos[i];
+				var col = pos[j];
+				
+				if (this.modules[row][col] !== null) {
+					continue;
+				}
+				
+				for (var r = -2; r <= 2; r++) {
+				
+					for (var c = -2; c <= 2; c++) {
+					
+						if (Math.abs(r) === 2 || 
+                            Math.abs(c) === 2 ||
+                            (r === 0 && c === 0) ) {
+							this.modules[row + r][col + c] = true;
+						} else {
+							this.modules[row + r][col + c] = false;
+						}
+					}
+				}
+			}
+		}
+	},
+	
+	setupTypeNumber : function(test) {
+	
+		var bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+        var mod;
+	
+		for (var i = 0; i < 18; i++) {
+			mod = (!test && ( (bits >> i) & 1) === 1);
+			this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+		}
+	
+		for (var x = 0; x < 18; x++) {
+			mod = (!test && ( (bits >> x) & 1) === 1);
+			this.modules[x % 3 + this.moduleCount - 8 - 3][Math.floor(x / 3)] = mod;
+		}
+	},
+	
+	setupTypeInfo : function(test, maskPattern) {
+	
+		var data = (this.errorCorrectLevel << 3) | maskPattern;
+		var bits = QRUtil.getBCHTypeInfo(data);
+        var mod;
+	
+		// vertical		
+		for (var v = 0; v < 15; v++) {
+	
+			mod = (!test && ( (bits >> v) & 1) === 1);
+	
+			if (v < 6) {
+				this.modules[v][8] = mod;
+			} else if (v < 8) {
+				this.modules[v + 1][8] = mod;
+			} else {
+				this.modules[this.moduleCount - 15 + v][8] = mod;
+			}
+		}
+	
+		// horizontal
+		for (var h = 0; h < 15; h++) {
+	
+			mod = (!test && ( (bits >> h) & 1) === 1);
+			
+			if (h < 8) {
+				this.modules[8][this.moduleCount - h - 1] = mod;
+			} else if (h < 9) {
+				this.modules[8][15 - h - 1 + 1] = mod;
+			} else {
+				this.modules[8][15 - h - 1] = mod;
+			}
+		}
+	
+		// fixed module
+		this.modules[this.moduleCount - 8][8] = (!test);
+	
+	},
+	
+	mapData : function(data, maskPattern) {
+		
+		var inc = -1;
+		var row = this.moduleCount - 1;
+		var bitIndex = 7;
+		var byteIndex = 0;
+		
+		for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+	
+			if (col === 6) col--;
+	
+			while (true) {
+	
+				for (var c = 0; c < 2; c++) {
+					
+					if (this.modules[row][col - c] === null) {
+						
+						var dark = false;
+	
+						if (byteIndex < data.length) {
+							dark = ( ( (data[byteIndex] >>> bitIndex) & 1) === 1);
+						}
+	
+						var mask = QRUtil.getMask(maskPattern, row, col - c);
+	
+						if (mask) {
+							dark = !dark;
+						}
+						
+						this.modules[row][col - c] = dark;
+						bitIndex--;
+	
+						if (bitIndex === -1) {
+							byteIndex++;
+							bitIndex = 7;
+						}
+					}
+				}
+								
+				row += inc;
+	
+				if (row < 0 || this.moduleCount <= row) {
+					row -= inc;
+					inc = -inc;
+					break;
+				}
+			}
+		}
+		
+	}
+
+};
+
+QRCode.PAD0 = 0xEC;
+QRCode.PAD1 = 0x11;
+
+QRCode.createData = function(typeNumber, errorCorrectLevel, dataList) {
+	
+	var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+	
+	var buffer = new QRBitBuffer();
+	
+	for (var i = 0; i < dataList.length; i++) {
+		var data = dataList[i];
+		buffer.put(data.mode, 4);
+		buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+		data.write(buffer);
+	}
+
+	// calc num max data.
+	var totalDataCount = 0;
+	for (var x = 0; x < rsBlocks.length; x++) {
+		totalDataCount += rsBlocks[x].dataCount;
+	}
+
+	if (buffer.getLengthInBits() > totalDataCount * 8) {
+		throw new Error("code length overflow. (" + 
+            buffer.getLengthInBits() + 
+            ">" +  
+            totalDataCount * 8 + 
+            ")");
+	}
+
+	// end code
+	if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+		buffer.put(0, 4);
+	}
+
+	// padding
+	while (buffer.getLengthInBits() % 8 !== 0) {
+		buffer.putBit(false);
+	}
+
+	// padding
+	while (true) {
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD0, 8);
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD1, 8);
+	}
+
+	return QRCode.createBytes(buffer, rsBlocks);
+};
+
+QRCode.createBytes = function(buffer, rsBlocks) {
+
+	var offset = 0;
+	
+	var maxDcCount = 0;
+	var maxEcCount = 0;
+	
+	var dcdata = new Array(rsBlocks.length);
+	var ecdata = new Array(rsBlocks.length);
+	
+	for (var r = 0; r < rsBlocks.length; r++) {
+
+		var dcCount = rsBlocks[r].dataCount;
+		var ecCount = rsBlocks[r].totalCount - dcCount;
+
+		maxDcCount = Math.max(maxDcCount, dcCount);
+		maxEcCount = Math.max(maxEcCount, ecCount);
+		
+		dcdata[r] = new Array(dcCount);
+		
+		for (var i = 0; i < dcdata[r].length; i++) {
+			dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+		}
+		offset += dcCount;
+		
+		var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+		var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+		var modPoly = rawPoly.mod(rsPoly);
+		ecdata[r] = new Array(rsPoly.getLength() - 1);
+		for (var x = 0; x < ecdata[r].length; x++) {
+            var modIndex = x + modPoly.getLength() - ecdata[r].length;
+			ecdata[r][x] = (modIndex >= 0)? modPoly.get(modIndex) : 0;
+		}
+
+	}
+	
+	var totalCodeCount = 0;
+	for (var y = 0; y < rsBlocks.length; y++) {
+		totalCodeCount += rsBlocks[y].totalCount;
+	}
+
+	var data = new Array(totalCodeCount);
+	var index = 0;
+
+	for (var z = 0; z < maxDcCount; z++) {
+		for (var s = 0; s < rsBlocks.length; s++) {
+			if (z < dcdata[s].length) {
+				data[index++] = dcdata[s][z];
+			}
+		}
+	}
+
+	for (var xx = 0; xx < maxEcCount; xx++) {
+		for (var t = 0; t < rsBlocks.length; t++) {
+			if (xx < ecdata[t].length) {
+				data[index++] = ecdata[t][xx];
+			}
+		}
+	}
+
+	return data;
+
+};
+
+module.exports = QRCode;
+
+};
+__mods["QR8bitByte.js"]=function(module,exports,require){
+var QRMode = require('./QRMode');
+
+function QR8bitByte(data) {
+	this.mode = QRMode.MODE_8BIT_BYTE;
+	this.data = data;
+}
+
+QR8bitByte.prototype = {
+
+	getLength : function() {
+		return this.data.length;
+	},
+	
+	write : function(buffer) {
+		for (var i = 0; i < this.data.length; i++) {
+			// not JIS ...
+			buffer.put(this.data.charCodeAt(i), 8);
+		}
+	}
+};
+
+module.exports = QR8bitByte;
+
+};
+__mods["QRMode.js"]=function(module,exports,require){
+module.exports = {
+    MODE_NUMBER :       1 << 0,
+    MODE_ALPHA_NUM :    1 << 1,
+    MODE_8BIT_BYTE :    1 << 2,
+    MODE_KANJI :        1 << 3
+};
+
+};
+__mods["QRUtil.js"]=function(module,exports,require){
+var QRMode = require('./QRMode');
+var QRPolynomial = require('./QRPolynomial');
+var QRMath = require('./QRMath');
+var QRMaskPattern = require('./QRMaskPattern');
+
+var QRUtil = {
+
+    PATTERN_POSITION_TABLE : [
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50],
+        [6, 30, 54],        
+        [6, 32, 58],
+        [6, 34, 62],
+        [6, 26, 46, 66],
+        [6, 26, 48, 70],
+        [6, 26, 50, 74],
+        [6, 30, 54, 78],
+        [6, 30, 56, 82],
+        [6, 30, 58, 86],
+        [6, 34, 62, 90],
+        [6, 28, 50, 72, 94],
+        [6, 26, 50, 74, 98],
+        [6, 30, 54, 78, 102],
+        [6, 28, 54, 80, 106],
+        [6, 32, 58, 84, 110],
+        [6, 30, 58, 86, 114],
+        [6, 34, 62, 90, 118],
+        [6, 26, 50, 74, 98, 122],
+        [6, 30, 54, 78, 102, 126],
+        [6, 26, 52, 78, 104, 130],
+        [6, 30, 56, 82, 108, 134],
+        [6, 34, 60, 86, 112, 138],
+        [6, 30, 58, 86, 114, 142],
+        [6, 34, 62, 90, 118, 146],
+        [6, 30, 54, 78, 102, 126, 150],
+        [6, 24, 50, 76, 102, 128, 154],
+        [6, 28, 54, 80, 106, 132, 158],
+        [6, 32, 58, 84, 110, 136, 162],
+        [6, 26, 54, 82, 110, 138, 166],
+        [6, 30, 58, 86, 114, 142, 170]
+    ],
+
+    G15 : (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18 : (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK : (1 << 14) | (1 << 12) | (1 << 10)    | (1 << 4) | (1 << 1),
+
+    getBCHTypeInfo : function(data) {
+        var d = data << 10;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+            d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) ) );    
+        }
+        return ( (data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+
+    getBCHTypeNumber : function(data) {
+        var d = data << 12;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+            d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) ) );    
+        }
+        return (data << 12) | d;
+    },
+
+    getBCHDigit : function(data) {
+
+        var digit = 0;
+
+        while (data !== 0) {
+            digit++;
+            data >>>= 1;
+        }
+
+        return digit;
+    },
+
+    getPatternPosition : function(typeNumber) {
+        return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1];
+    },
+
+    getMask : function(maskPattern, i, j) {
+        
+        switch (maskPattern) {
+            
+        case QRMaskPattern.PATTERN000 : return (i + j) % 2 === 0;
+        case QRMaskPattern.PATTERN001 : return i % 2 === 0;
+        case QRMaskPattern.PATTERN010 : return j % 3 === 0;
+        case QRMaskPattern.PATTERN011 : return (i + j) % 3 === 0;
+        case QRMaskPattern.PATTERN100 : return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 === 0;
+        case QRMaskPattern.PATTERN101 : return (i * j) % 2 + (i * j) % 3 === 0;
+        case QRMaskPattern.PATTERN110 : return ( (i * j) % 2 + (i * j) % 3) % 2 === 0;
+        case QRMaskPattern.PATTERN111 : return ( (i * j) % 3 + (i + j) % 2) % 2 === 0;
+
+        default :
+            throw new Error("bad maskPattern:" + maskPattern);
+        }
+    },
+
+    getErrorCorrectPolynomial : function(errorCorrectLength) {
+
+        var a = new QRPolynomial([1], 0);
+
+        for (var i = 0; i < errorCorrectLength; i++) {
+            a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0) );
+        }
+
+        return a;
+    },
+
+    getLengthInBits : function(mode, type) {
+
+        if (1 <= type && type < 10) {
+
+            // 1 - 9
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 10;
+            case QRMode.MODE_ALPHA_NUM  : return 9;
+            case QRMode.MODE_8BIT_BYTE  : return 8;
+            case QRMode.MODE_KANJI      : return 8;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 27) {
+
+            // 10 - 26
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 12;
+            case QRMode.MODE_ALPHA_NUM  : return 11;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 10;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 41) {
+
+            // 27 - 40
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 14;
+            case QRMode.MODE_ALPHA_NUM  : return 13;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 12;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else {
+            throw new Error("type:" + type);
+        }
+    },
+
+    getLostPoint : function(qrCode) {
+        
+        var moduleCount = qrCode.getModuleCount();
+        var lostPoint = 0;
+        var row = 0; 
+        var col = 0;
+
+        
+        // LEVEL1
+        
+        for (row = 0; row < moduleCount; row++) {
+
+            for (col = 0; col < moduleCount; col++) {
+
+                var sameCount = 0;
+                var dark = qrCode.isDark(row, col);
+
+                for (var r = -1; r <= 1; r++) {
+
+                    if (row + r < 0 || moduleCount <= row + r) {
+                        continue;
+                    }
+
+                    for (var c = -1; c <= 1; c++) {
+
+                        if (col + c < 0 || moduleCount <= col + c) {
+                            continue;
+                        }
+
+                        if (r === 0 && c === 0) {
+                            continue;
+                        }
+
+                        if (dark === qrCode.isDark(row + r, col + c) ) {
+                            sameCount++;
+                        }
+                    }
+                }
+
+                if (sameCount > 5) {
+                    lostPoint += (3 + sameCount - 5);
+                }
+            }
+        }
+
+        // LEVEL2
+
+        for (row = 0; row < moduleCount - 1; row++) {
+            for (col = 0; col < moduleCount - 1; col++) {
+                var count = 0;
+                if (qrCode.isDark(row,     col    ) ) count++;
+                if (qrCode.isDark(row + 1, col    ) ) count++;
+                if (qrCode.isDark(row,     col + 1) ) count++;
+                if (qrCode.isDark(row + 1, col + 1) ) count++;
+                if (count === 0 || count === 4) {
+                    lostPoint += 3;
+                }
+            }
+        }
+
+        // LEVEL3
+
+        for (row = 0; row < moduleCount; row++) {
+            for (col = 0; col < moduleCount - 6; col++) {
+                if (qrCode.isDark(row, col) && 
+                        !qrCode.isDark(row, col + 1) && 
+                         qrCode.isDark(row, col + 2) && 
+                         qrCode.isDark(row, col + 3) && 
+                         qrCode.isDark(row, col + 4) && 
+                        !qrCode.isDark(row, col + 5) && 
+                         qrCode.isDark(row, col + 6) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount - 6; row++) {
+                if (qrCode.isDark(row, col) &&
+                        !qrCode.isDark(row + 1, col) &&
+                         qrCode.isDark(row + 2, col) &&
+                         qrCode.isDark(row + 3, col) &&
+                         qrCode.isDark(row + 4, col) &&
+                        !qrCode.isDark(row + 5, col) &&
+                         qrCode.isDark(row + 6, col) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        // LEVEL4
+        
+        var darkCount = 0;
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount; row++) {
+                if (qrCode.isDark(row, col) ) {
+                    darkCount++;
+                }
+            }
+        }
+        
+        var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+        lostPoint += ratio * 10;
+
+        return lostPoint;       
+    }
+
+};
+
+module.exports = QRUtil;
+
+};
+__mods["QRPolynomial.js"]=function(module,exports,require){
+var QRMath = require('./QRMath');
+
+function QRPolynomial(num, shift) {
+	if (num.length === undefined) {
+		throw new Error(num.length + "/" + shift);
+	}
+
+	var offset = 0;
+
+	while (offset < num.length && num[offset] === 0) {
+		offset++;
+	}
+
+	this.num = new Array(num.length - offset + shift);
+	for (var i = 0; i < num.length - offset; i++) {
+		this.num[i] = num[i + offset];
+	}
+}
+
+QRPolynomial.prototype = {
+
+	get : function(index) {
+		return this.num[index];
+	},
+	
+	getLength : function() {
+		return this.num.length;
+	},
+	
+	multiply : function(e) {
+	
+		var num = new Array(this.getLength() + e.getLength() - 1);
+	
+		for (var i = 0; i < this.getLength(); i++) {
+			for (var j = 0; j < e.getLength(); j++) {
+				num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i) ) + QRMath.glog(e.get(j) ) );
+			}
+		}
+	
+		return new QRPolynomial(num, 0);
+	},
+	
+	mod : function(e) {
+	
+		if (this.getLength() - e.getLength() < 0) {
+			return this;
+		}
+	
+		var ratio = QRMath.glog(this.get(0) ) - QRMath.glog(e.get(0) );
+	
+		var num = new Array(this.getLength() );
+		
+		for (var i = 0; i < this.getLength(); i++) {
+			num[i] = this.get(i);
+		}
+		
+		for (var x = 0; x < e.getLength(); x++) {
+			num[x] ^= QRMath.gexp(QRMath.glog(e.get(x) ) + ratio);
+		}
+	
+		// recursive call
+		return new QRPolynomial(num, 0).mod(e);
+	}
+};
+
+module.exports = QRPolynomial;
+
+};
+__mods["QRMath.js"]=function(module,exports,require){
+var QRMath = {
+
+	glog : function(n) {
+	
+		if (n < 1) {
+			throw new Error("glog(" + n + ")");
+		}
+		
+		return QRMath.LOG_TABLE[n];
+	},
+	
+	gexp : function(n) {
+	
+		while (n < 0) {
+			n += 255;
+		}
+	
+		while (n >= 256) {
+			n -= 255;
+		}
+	
+		return QRMath.EXP_TABLE[n];
+	},
+	
+	EXP_TABLE : new Array(256),
+	
+	LOG_TABLE : new Array(256)
+
+};
+	
+for (var i = 0; i < 8; i++) {
+	QRMath.EXP_TABLE[i] = 1 << i;
+}
+for (var i = 8; i < 256; i++) {
+	QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4]
+		^ QRMath.EXP_TABLE[i - 5]
+		^ QRMath.EXP_TABLE[i - 6]
+		^ QRMath.EXP_TABLE[i - 8];
+}
+for (var i = 0; i < 255; i++) {
+	QRMath.LOG_TABLE[QRMath.EXP_TABLE[i] ] = i;
+}
+
+module.exports = QRMath;
+
+};
+__mods["QRMaskPattern.js"]=function(module,exports,require){
+module.exports = {
+	PATTERN000 : 0,
+	PATTERN001 : 1,
+	PATTERN010 : 2,
+	PATTERN011 : 3,
+	PATTERN100 : 4,
+	PATTERN101 : 5,
+	PATTERN110 : 6,
+	PATTERN111 : 7
+};
+
+};
+__mods["QRRSBlock.js"]=function(module,exports,require){
+var QRErrorCorrectLevel = require('./QRErrorCorrectLevel');
+
+function QRRSBlock(totalCount, dataCount) {
+	this.totalCount = totalCount;
+	this.dataCount  = dataCount;
+}
+
+QRRSBlock.RS_BLOCK_TABLE = [
+
+	// L
+	// M
+	// Q
+	// H
+
+	// 1
+	[1, 26, 19],
+	[1, 26, 16],
+	[1, 26, 13],
+	[1, 26, 9],
+	
+	// 2
+	[1, 44, 34],
+	[1, 44, 28],
+	[1, 44, 22],
+	[1, 44, 16],
+
+	// 3
+	[1, 70, 55],
+	[1, 70, 44],
+	[2, 35, 17],
+	[2, 35, 13],
+
+	// 4		
+	[1, 100, 80],
+	[2, 50, 32],
+	[2, 50, 24],
+	[4, 25, 9],
+	
+	// 5
+	[1, 134, 108],
+	[2, 67, 43],
+	[2, 33, 15, 2, 34, 16],
+	[2, 33, 11, 2, 34, 12],
+	
+	// 6
+	[2, 86, 68],
+	[4, 43, 27],
+	[4, 43, 19],
+	[4, 43, 15],
+	
+	// 7		
+	[2, 98, 78],
+	[4, 49, 31],
+	[2, 32, 14, 4, 33, 15],
+	[4, 39, 13, 1, 40, 14],
+	
+	// 8
+	[2, 121, 97],
+	[2, 60, 38, 2, 61, 39],
+	[4, 40, 18, 2, 41, 19],
+	[4, 40, 14, 2, 41, 15],
+	
+	// 9
+	[2, 146, 116],
+	[3, 58, 36, 2, 59, 37],
+	[4, 36, 16, 4, 37, 17],
+	[4, 36, 12, 4, 37, 13],
+	
+	// 10		
+	[2, 86, 68, 2, 87, 69],
+	[4, 69, 43, 1, 70, 44],
+	[6, 43, 19, 2, 44, 20],
+	[6, 43, 15, 2, 44, 16],
+
+	// 11
+	[4, 101, 81],
+	[1, 80, 50, 4, 81, 51],
+	[4, 50, 22, 4, 51, 23],
+	[3, 36, 12, 8, 37, 13],
+
+	// 12
+	[2, 116, 92, 2, 117, 93],
+	[6, 58, 36, 2, 59, 37],
+	[4, 46, 20, 6, 47, 21],
+	[7, 42, 14, 4, 43, 15],
+
+	// 13
+	[4, 133, 107],
+	[8, 59, 37, 1, 60, 38],
+	[8, 44, 20, 4, 45, 21],
+	[12, 33, 11, 4, 34, 12],
+
+	// 14
+	[3, 145, 115, 1, 146, 116],
+	[4, 64, 40, 5, 65, 41],
+	[11, 36, 16, 5, 37, 17],
+	[11, 36, 12, 5, 37, 13],
+
+	// 15
+	[5, 109, 87, 1, 110, 88],
+	[5, 65, 41, 5, 66, 42],
+	[5, 54, 24, 7, 55, 25],
+	[11, 36, 12],
+
+	// 16
+	[5, 122, 98, 1, 123, 99],
+	[7, 73, 45, 3, 74, 46],
+	[15, 43, 19, 2, 44, 20],
+	[3, 45, 15, 13, 46, 16],
+
+	// 17
+	[1, 135, 107, 5, 136, 108],
+	[10, 74, 46, 1, 75, 47],
+	[1, 50, 22, 15, 51, 23],
+	[2, 42, 14, 17, 43, 15],
+
+	// 18
+	[5, 150, 120, 1, 151, 121],
+	[9, 69, 43, 4, 70, 44],
+	[17, 50, 22, 1, 51, 23],
+	[2, 42, 14, 19, 43, 15],
+
+	// 19
+	[3, 141, 113, 4, 142, 114],
+	[3, 70, 44, 11, 71, 45],
+	[17, 47, 21, 4, 48, 22],
+	[9, 39, 13, 16, 40, 14],
+
+	// 20
+	[3, 135, 107, 5, 136, 108],
+	[3, 67, 41, 13, 68, 42],
+	[15, 54, 24, 5, 55, 25],
+	[15, 43, 15, 10, 44, 16],
+
+	// 21
+	[4, 144, 116, 4, 145, 117],
+	[17, 68, 42],
+	[17, 50, 22, 6, 51, 23],
+	[19, 46, 16, 6, 47, 17],
+
+	// 22
+	[2, 139, 111, 7, 140, 112],
+	[17, 74, 46],
+	[7, 54, 24, 16, 55, 25],
+	[34, 37, 13],
+
+	// 23
+	[4, 151, 121, 5, 152, 122],
+	[4, 75, 47, 14, 76, 48],
+	[11, 54, 24, 14, 55, 25],
+	[16, 45, 15, 14, 46, 16],
+
+	// 24
+	[6, 147, 117, 4, 148, 118],
+	[6, 73, 45, 14, 74, 46],
+	[11, 54, 24, 16, 55, 25],
+	[30, 46, 16, 2, 47, 17],
+
+	// 25
+	[8, 132, 106, 4, 133, 107],
+	[8, 75, 47, 13, 76, 48],
+	[7, 54, 24, 22, 55, 25],
+	[22, 45, 15, 13, 46, 16],
+
+	// 26
+	[10, 142, 114, 2, 143, 115],
+	[19, 74, 46, 4, 75, 47],
+	[28, 50, 22, 6, 51, 23],
+	[33, 46, 16, 4, 47, 17],
+
+	// 27
+	[8, 152, 122, 4, 153, 123],
+	[22, 73, 45, 3, 74, 46],
+	[8, 53, 23, 26, 54, 24],
+	[12, 45, 15, 28, 46, 16],
+
+	// 28
+	[3, 147, 117, 10, 148, 118],
+	[3, 73, 45, 23, 74, 46],
+	[4, 54, 24, 31, 55, 25],
+	[11, 45, 15, 31, 46, 16],
+
+	// 29
+	[7, 146, 116, 7, 147, 117],
+	[21, 73, 45, 7, 74, 46],
+	[1, 53, 23, 37, 54, 24],
+	[19, 45, 15, 26, 46, 16],
+
+	// 30
+	[5, 145, 115, 10, 146, 116],
+	[19, 75, 47, 10, 76, 48],
+	[15, 54, 24, 25, 55, 25],
+	[23, 45, 15, 25, 46, 16],
+
+	// 31
+	[13, 145, 115, 3, 146, 116],
+	[2, 74, 46, 29, 75, 47],
+	[42, 54, 24, 1, 55, 25],
+	[23, 45, 15, 28, 46, 16],
+
+	// 32
+	[17, 145, 115],
+	[10, 74, 46, 23, 75, 47],
+	[10, 54, 24, 35, 55, 25],
+	[19, 45, 15, 35, 46, 16],
+
+	// 33
+	[17, 145, 115, 1, 146, 116],
+	[14, 74, 46, 21, 75, 47],
+	[29, 54, 24, 19, 55, 25],
+	[11, 45, 15, 46, 46, 16],
+
+	// 34
+	[13, 145, 115, 6, 146, 116],
+	[14, 74, 46, 23, 75, 47],
+	[44, 54, 24, 7, 55, 25],
+	[59, 46, 16, 1, 47, 17],
+
+	// 35
+	[12, 151, 121, 7, 152, 122],
+	[12, 75, 47, 26, 76, 48],
+	[39, 54, 24, 14, 55, 25],
+	[22, 45, 15, 41, 46, 16],
+
+	// 36
+	[6, 151, 121, 14, 152, 122],
+	[6, 75, 47, 34, 76, 48],
+	[46, 54, 24, 10, 55, 25],
+	[2, 45, 15, 64, 46, 16],
+
+	// 37
+	[17, 152, 122, 4, 153, 123],
+	[29, 74, 46, 14, 75, 47],
+	[49, 54, 24, 10, 55, 25],
+	[24, 45, 15, 46, 46, 16],
+
+	// 38
+	[4, 152, 122, 18, 153, 123],
+	[13, 74, 46, 32, 75, 47],
+	[48, 54, 24, 14, 55, 25],
+	[42, 45, 15, 32, 46, 16],
+
+	// 39
+	[20, 147, 117, 4, 148, 118],
+	[40, 75, 47, 7, 76, 48],
+	[43, 54, 24, 22, 55, 25],
+	[10, 45, 15, 67, 46, 16],
+
+	// 40
+	[19, 148, 118, 6, 149, 119],
+	[18, 75, 47, 31, 76, 48],
+	[34, 54, 24, 34, 55, 25],
+	[20, 45, 15, 61, 46, 16]
+];
+
+QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+	
+	var rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+	
+	if (rsBlock === undefined) {
+		throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel);
+	}
+
+	var length = rsBlock.length / 3;
+	
+	var list = [];
+	
+	for (var i = 0; i < length; i++) {
+
+		var count = rsBlock[i * 3 + 0];
+		var totalCount = rsBlock[i * 3 + 1];
+		var dataCount  = rsBlock[i * 3 + 2];
+
+		for (var j = 0; j < count; j++) {
+			list.push(new QRRSBlock(totalCount, dataCount) );	
+		}
+	}
+	
+	return list;
+};
+
+QRRSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
+
+	switch(errorCorrectLevel) {
+	case QRErrorCorrectLevel.L :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+	case QRErrorCorrectLevel.M :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+	case QRErrorCorrectLevel.Q :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+	case QRErrorCorrectLevel.H :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+	default :
+		return undefined;
+	}
+};
+
+module.exports = QRRSBlock;
+
+};
+__mods["QRErrorCorrectLevel.js"]=function(module,exports,require){
+module.exports = {
+	L : 1,
+	M : 0,
+	Q : 3,
+	H : 2
+};
+
+
+};
+__mods["QRBitBuffer.js"]=function(module,exports,require){
+function QRBitBuffer() {
+	this.buffer = [];
+	this.length = 0;
+}
+
+QRBitBuffer.prototype = {
+
+	get : function(index) {
+		var bufIndex = Math.floor(index / 8);
+		return ( (this.buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+	},
+	
+	put : function(num, length) {
+		for (var i = 0; i < length; i++) {
+			this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+		}
+	},
+	
+	getLengthInBits : function() {
+		return this.length;
+	},
+	
+	putBit : function(bit) {
+	
+		var bufIndex = Math.floor(this.length / 8);
+		if (this.buffer.length <= bufIndex) {
+			this.buffer.push(0);
+		}
+	
+		if (bit) {
+			this.buffer[bufIndex] |= (0x80 >>> (this.length % 8) );
+		}
+	
+		this.length++;
+	}
+};
+
+module.exports = QRBitBuffer;
+
+};
+
+function __resolve(from, req){
+  if(!req.startsWith("./")) return req;
+  const base=from.split("/"); base.pop();
+  req.split("/").forEach(p=>{if(p==="."||!p)return;if(p==="..")base.pop();else base.push(p)});
+  let id=base.join("/");
+  if(!id.endsWith(".js")) id+=".js";
+  return id;
+}
+function __require(id,from){
+  id=__resolve(from||"",id);
+  if(__cache[id])return __cache[id].exports;
+  if(!__mods[id])throw new Error("Modulo QR mancante: "+id);
+  const module={exports:{}};__cache[id]=module;
+  __mods[id](module,module.exports,(r)=>__require(r,id));
+  return module.exports;
+}
+global.EmbeddedQRCode=__require("index.js","");
+})(window);
+
 const DEF=[
-{id:"general",name:"Generale",subject:"Ti va di lasciare una recensione?",body:"Ciao {{nome}},\\n\\ngrazie per aver scelto {{azienda}}.\\n\\nLa tua opinione è importante. Puoi lasciare una recensione qui:\\n{{link_recensione}}\\n\\nGrazie,\\n{{firma}}"},
-{id:"reminder",name:"Promemoria",subject:"Promemoria recensione",body:"Ciao {{nome}},\\n\\nsolo un piccolo promemoria. Se hai un minuto, puoi lasciare la tua recensione qui:\\n{{link_recensione}}\\n\\nGrazie,\\n{{firma}}"}
+{id:"general",name:"Generale",subject:"Ti va di lasciare una recensione?",body:"Ciao {{nome}},\n\ngrazie per aver scelto {{azienda}}.\n\nLa tua opinione è importante e può aiutare altre persone a scegliere con maggiore fiducia.\n\nGrazie,\n{{firma}}"},
+{id:"reminder",name:"Promemoria",subject:"Promemoria recensione",body:"Ciao {{nome}},\n\nsolo un piccolo promemoria. Se hai un minuto, puoi lasciare la tua recensione usando il pulsante qui sotto.\n\nGrazie,\n{{firma}}"}
 ];
 const state={
-clients:JSON.parse(localStorage.getItem("rf_clients")||"[]"),
-templates:JSON.parse(localStorage.getItem("rf_templates")||"null")||DEF,
-settings:JSON.parse(localStorage.getItem("rf_settings")||'{"signature":"","defaultCompany":"","defaultReviewLink":""}'),
-activities:JSON.parse(localStorage.getItem("rf_activities")||"[]"),
-theme:localStorage.getItem("rf_theme")||"light"
+clients:JSON.parse(localStorage.getItem("rf2_clients")||"[]"),
+templates:JSON.parse(localStorage.getItem("rf2_templates")||"null")||DEF,
+settings:JSON.parse(localStorage.getItem("rf2_settings")||'{"signature":"","defaultCompany":"","defaultReviewLink":"","theme":"auto"}'),
+activities:JSON.parse(localStorage.getItem("rf2_activities")||"[]"),
+timeline:JSON.parse(localStorage.getItem("rf2_timeline")||"[]")
 };
+let lastSavedId=null;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],uid=p=>p+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-function save(){localStorage.setItem("rf_clients",JSON.stringify(state.clients));localStorage.setItem("rf_templates",JSON.stringify(state.templates));localStorage.setItem("rf_settings",JSON.stringify(state.settings));localStorage.setItem("rf_activities",JSON.stringify(state.activities));localStorage.setItem("rf_theme",state.theme)}
+function save(){localStorage.setItem("rf2_clients",JSON.stringify(state.clients));localStorage.setItem("rf2_templates",JSON.stringify(state.templates));localStorage.setItem("rf2_settings",JSON.stringify(state.settings));localStorage.setItem("rf2_activities",JSON.stringify(state.activities));localStorage.setItem("rf2_timeline",JSON.stringify(state.timeline))}
 function toast(x){const t=$("#toast");t.textContent=x;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
 function go(v){["dashboard","clients","templates","settings"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));if(v==="clients")renderClients();if(v==="templates")renderTemplates();if(v==="settings")renderActivities()}
 $$(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
-function applyTheme(){document.body.classList.toggle("dark",state.theme==="dark");$("#themeCheck").checked=state.theme==="dark";$("#themeBtn").textContent=state.theme==="dark"?"Modalità giorno":"Modalità notte"}
-$("#themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";save();applyTheme()};$("#themeCheck").onchange=e=>{state.theme=e.target.checked?"dark":"light";save();applyTheme()};
-function tpl(id){return state.templates.find(t=>t.id===id)||state.templates[0]}function fill(s,c){return s.replaceAll("{{nome}}",c.name||"Nome cliente").replaceAll("{{azienda}}",c.company||state.settings.defaultCompany||"la nostra attività").replaceAll("{{firma}}",state.settings.signature||"Il team").replaceAll("{{link_recensione}}",c.reviewLink||state.settings.defaultReviewLink||"[link recensione]")}
+function resolvedTheme(){if(state.settings.theme==="auto")return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";return state.settings.theme}
+function applyTheme(){document.body.classList.toggle("dark",resolvedTheme()==="dark");$("#themeSelect").value=state.settings.theme||"auto";$("#themeBtn").textContent="Tema: "+(state.settings.theme==="auto"?"auto":state.settings.theme==="dark"?"notte":"giorno")}
+$("#themeBtn").onclick=()=>{const cycle={auto:"light",light:"dark",dark:"auto"};state.settings.theme=cycle[state.settings.theme||"auto"];save();applyTheme()};matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
+function tpl(id){return state.templates.find(t=>t.id===id)||state.templates[0]}
+function fill(s,c){return String(s||"").replaceAll("\\n","\n").replaceAll("{{nome}}",c.name||"Nome cliente").replaceAll("{{azienda}}",c.company||state.settings.defaultCompany||"la nostra attività").replaceAll("{{firma}}",state.settings.signature||"Il team").replaceAll("{{link_recensione}}","")}
 function formData(){return{id:$("#clientId").value,name:$("#name").value.trim(),email:$("#email").value.trim(),phone:$("#phone").value.trim(),activityId:$("#activityId").value,company:$("#company").value.trim(),reminderDate:$("#reminderDate").value,templateId:$("#templateId").value,reminderTemplateId:$("#reminderTemplateId").value,reviewLink:$("#reviewLink").value.trim(),note:$("#note").value.trim()}}
 function updatePreview(){const c=formData(),t=tpl(c.templateId);$("#previewSubject").textContent=fill(t.subject,c);$("#previewBody").textContent=fill(t.body,c);$("#previewLink").href=c.reviewLink||"#"}
 ["name","email","phone","company","reminderDate","templateId","reminderTemplateId","reviewLink","note"].forEach(id=>$("#"+id).addEventListener("input",updatePreview));
 function renderOptions(){const o=state.templates.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");$("#templateId").innerHTML=o;$("#reminderTemplateId").innerHTML=o;$("#activityId").innerHTML='<option value="">Nessuna</option>'+state.activities.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}
-$("#activityId").onchange=e=>{const a=state.activities.find(x=>x.id===e.target.value);if(a){$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;updatePreview()}};
-function resetForm(){$("#clientForm").reset();$("#clientId").value="";$("#company").value=state.settings.defaultCompany||"";$("#reviewLink").value=state.settings.defaultReviewLink||"";$("#templateId").value=state.templates[0]?.id||"";$("#reminderTemplateId").value=state.templates[1]?.id||state.templates[0]?.id||"";updatePreview()}
+$("#activityId").onchange=e=>{const a=state.activities.find(x=>x.id===e.target.value);if(a){$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;const d=new Date();d.setDate(d.getDate()+(Number(a.reminderDays)||7));$("#reminderDate").value=d.toISOString().slice(0,10);updatePreview()}};
+function resetForm(){$("#clientForm").reset();$("#clientId").value="";$("#company").value=state.settings.defaultCompany||"";$("#reviewLink").value=state.settings.defaultReviewLink||"";$("#templateId").value=state.templates[0]?.id||"";$("#reminderTemplateId").value=state.templates[1]?.id||state.templates[0]?.id||"";$("#postSave").classList.add("hidden");updatePreview()}
 $("#resetBtn").onclick=resetForm;$("#newBtn").onclick=()=>{go("dashboard");resetForm();$("#name").focus()};
-$("#clientForm").onsubmit=e=>{e.preventDefault();const c=formData();if(!c.name||!c.email||!c.reviewLink)return toast("Compila i campi obbligatori");if(state.clients.some(x=>x.email.toLowerCase()===c.email.toLowerCase()&&x.id!==c.id&&x.status!=="Archiviata"))return toast("Email già presente tra i clienti attivi");const now=new Date().toISOString();if(c.id){const i=state.clients.findIndex(x=>x.id===c.id);state.clients[i]={...state.clients[i],...c,updatedAt:now}}else state.clients.unshift({...c,id:uid("c"),status:"Non inviata",createdAt:now,updatedAt:now,lastSentAt:null});save();resetForm();renderAll();toast("Cliente salvato")};
-function mail(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId);return`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(fill(t.subject,c))}&body=${encodeURIComponent(fill(t.body,c))}`}
-function wa(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),p=(c.phone||"").replace(/\\D/g,"");return`https://wa.me/${p}?text=${encodeURIComponent(fill(t.body,c))}`}
-function touch(c,rem){c.status=rem?"Promemoria":"Inviata";c.lastSentAt=new Date().toISOString();save();renderAll()}
+function addTimeline(clientId,type,detail){state.timeline.unshift({id:uid("ev"),clientId,type,detail,date:new Date().toISOString()})}
+$("#clientForm").onsubmit=e=>{e.preventDefault();const c=formData();if(!c.name||!c.email||!c.reviewLink)return toast("Compila i campi obbligatori");if(state.clients.some(x=>x.email.toLowerCase()===c.email.toLowerCase()&&x.id!==c.id&&x.status!=="Archiviata"))return toast("Email già presente tra i clienti attivi");const now=new Date().toISOString();if(c.id){const i=state.clients.findIndex(x=>x.id===c.id);state.clients[i]={...state.clients[i],...c,updatedAt:now};lastSavedId=c.id;addTimeline(c.id,"Modifica","Dati cliente aggiornati")}else{const n={...c,id:uid("c"),status:"Non inviata",createdAt:now,updatedAt:now,lastSentAt:null};state.clients.unshift(n);lastSavedId=n.id;addTimeline(n.id,"Creazione","Cliente inserito")}save();renderAll();$("#postSave").classList.remove("hidden");toast("Cliente salvato")};
+function mail(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),body=fill(t.body,c)+"\n\n"+c.reviewLink;return`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(fill(t.subject,c))}&body=${encodeURIComponent(body)}`}
+function wa(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),body=fill(t.body,c)+"\n\n"+c.reviewLink,p=(c.phone||"").replace(/\D/g,"");return`https://wa.me/${p}?text=${encodeURIComponent(body)}`}
+function touch(c,rem,channel){c.status=rem?"Promemoria":"Inviata";c.lastSentAt=new Date().toISOString();addTimeline(c.id,rem?"Promemoria":"Invio",channel);save();renderAll()}
 $("#openEmail").onclick=()=>{const c=formData();if(!c.email)return toast("Inserisci l’email");location.href=mail(c,false)};$("#copyText").onclick=async()=>{await navigator.clipboard.writeText(fill(tpl($("#templateId").value).body,formData()));toast("Testo copiato")};
+$("#postEmail").onclick=()=>lastSavedId&&sendEmail(lastSavedId,false);$("#postWhatsApp").onclick=()=>lastSavedId&&sendWhatsApp(lastSavedId,false);$("#postCopy").onclick=async()=>{const c=state.clients.find(x=>x.id===lastSavedId);if(c){await navigator.clipboard.writeText(c.reviewLink);toast("Link copiato")}};$("#postQr").onclick=()=>lastSavedId&&showQr(lastSavedId);
 function dateIt(x){return x?new Date(x).toLocaleDateString("it-IT"):"—"}function days(x){return x?Math.floor((Date.now()-new Date(x).getTime())/86400000):null}
 function isDue(c){if(!c.reminderDate||["Completata","Archiviata"].includes(c.status))return false;const t=new Date();t.setHours(0,0,0,0);return new Date(c.reminderDate+"T00:00:00")<=t}
-function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table"><table><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span></td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${c.lastSentAt?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="actions"><button class="mini" onclick="editClient('${c.id}')">Modifica</button><button class="mini" onclick="duplicateClient('${c.id}')">Duplica</button><button class="mini" onclick="sendEmail('${c.id}',false)">Email</button><button class="mini" onclick="sendWhatsApp('${c.id}',false)">WhatsApp</button><button class="mini" onclick="sendEmail('${c.id}',true)">Promemoria</button><button class="mini" onclick="completeClient('${c.id}')">Completa</button><button class="mini" onclick="archiveClient('${c.id}')">${c.status==="Archiviata"?"Ripristina":"Archivia"}</button><button class="mini" onclick="removeClient('${c.id}')">Elimina</button></div></td></tr>`).join("")}</tbody></table></div>`}
+function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span></td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${c.lastSentAt?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="row-actions"><button class="mini" onclick="editClient('${c.id}')">Modifica</button><button class="mini" onclick="duplicateClient('${c.id}')">Duplica</button><button class="mini" onclick="sendEmail('${c.id}',false)">Email</button><button class="mini" onclick="sendWhatsApp('${c.id}',false)">WhatsApp</button><button class="mini" onclick="sendEmail('${c.id}',true)">Promemoria</button><button class="mini" onclick="showTimeline('${c.id}')">Timeline</button><button class="mini" onclick="showQr('${c.id}')">QR</button><button class="mini" onclick="completeClient('${c.id}')">Completa</button><button class="mini" onclick="archiveClient('${c.id}')">${c.status==="Archiviata"?"Ripristina":"Archivia"}</button><button class="mini" onclick="removeClient('${c.id}')">Elimina</button></div></td></tr>`).join("")}</tbody></table></div>`}
 function renderClients(){const q=$("#search").value.toLowerCase(),s=$("#statusFilter").value,d=$("#dueFilter").value,t=new Date();t.setHours(0,0,0,0);const rows=state.clients.filter(c=>{const h=[c.name,c.email,c.phone,c.company,c.note].join(" ").toLowerCase();let ok=!q||h.includes(q);ok=ok&&(!s||c.status===s);if(d==="due")ok=ok&&isDue(c);if(d==="future")ok=ok&&c.reminderDate&&new Date(c.reminderDate+"T00:00:00")>t;if(d==="none")ok=ok&&!c.reminderDate;return ok});$("#clientTable").innerHTML=table(rows)}
 $("#search").oninput=renderClients;$("#statusFilter").onchange=renderClients;$("#dueFilter").onchange=renderClients;
 window.editClient=id=>{const c=state.clients.find(x=>x.id===id);go("dashboard");Object.entries({clientId:c.id,name:c.name,email:c.email,phone:c.phone||"",activityId:c.activityId||"",company:c.company||"",reminderDate:c.reminderDate||"",templateId:c.templateId,reminderTemplateId:c.reminderTemplateId||c.templateId,reviewLink:c.reviewLink,note:c.note||""}).forEach(([k,v])=>$("#"+k).value=v);updatePreview()};
-window.duplicateClient=id=>{const c=state.clients.find(x=>x.id===id),n={...c,id:uid("c"),name:c.name+" - copia",email:"",status:"Non inviata",lastSentAt:null,createdAt:new Date().toISOString()};state.clients.unshift(n);save();renderAll();editClient(n.id);toast("Cliente duplicato")};
-window.sendEmail=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem);location.href=mail(c,rem)};window.sendWhatsApp=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem);window.open(wa(c,rem),"_blank")};
-window.completeClient=id=>{const c=state.clients.find(x=>x.id===id);c.status="Completata";save();renderAll()};window.archiveClient=id=>{const c=state.clients.find(x=>x.id===id);c.status=c.status==="Archiviata"?"Non inviata":"Archiviata";save();renderAll()};window.removeClient=id=>{if(confirm("Eliminare il cliente?")){state.clients=state.clients.filter(x=>x.id!==id);save();renderAll()}};
-function renderStats(){$("#sTotal").textContent=state.clients.length;$("#sSent").textContent=state.clients.filter(c=>["Inviata","Promemoria","Completata"].includes(c.status)).length;$("#sDue").textContent=state.clients.filter(isDue).length;$("#sDone").textContent=state.clients.filter(c=>c.status==="Completata").length;$("#recent").innerHTML=table(state.clients.slice(0,5))}
+window.duplicateClient=id=>{const c=state.clients.find(x=>x.id===id),n={...c,id:uid("c"),name:c.name+" - copia",email:"",status:"Non inviata",lastSentAt:null,createdAt:new Date().toISOString()};state.clients.unshift(n);addTimeline(n.id,"Duplicazione","Creato da "+c.name);save();renderAll();editClient(n.id);toast("Cliente duplicato")};
+window.sendEmail=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem,"Email");location.href=mail(c,rem)};window.sendWhatsApp=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem,"WhatsApp");window.open(wa(c,rem),"_blank")};
+window.completeClient=id=>{const c=state.clients.find(x=>x.id===id);c.status="Completata";addTimeline(c.id,"Completamento","Recensione completata");save();renderAll()};window.archiveClient=id=>{const c=state.clients.find(x=>x.id===id);c.status=c.status==="Archiviata"?"Non inviata":"Archiviata";addTimeline(c.id,c.status==="Archiviata"?"Archiviazione":"Ripristino","Stato aggiornato");save();renderAll()};window.removeClient=id=>{if(confirm("Eliminare il cliente?")){state.clients=state.clients.filter(x=>x.id!==id);state.timeline=state.timeline.filter(x=>x.clientId!==id);save();renderAll()}};
+function weekStart(){const d=new Date();d.setDate(d.getDate()-7);return d}
+function renderStats(){const sent=state.clients.filter(c=>["Inviata","Promemoria","Completata"].includes(c.status)).length,done=state.clients.filter(c=>c.status==="Completata").length,recent=state.clients.filter(c=>new Date(c.createdAt)>=weekStart()).length,recentSent=state.clients.filter(c=>c.lastSentAt&&new Date(c.lastSentAt)>=weekStart()).length;$("#sTotal").textContent=state.clients.length;$("#sSent").textContent=sent;$("#sDue").textContent=state.clients.filter(isDue).length;$("#sDone").textContent=done;$("#hTotal").textContent=recent+" questa settimana";$("#hSent").textContent=recentSent+" questa settimana";$("#hDue").textContent=state.clients.filter(isDue).length+" scaduti";$("#hRate").textContent="Conversione "+(sent?Math.round(done/sent*100):0)+"%"}
+function renderDash(){ $("#dashRecent").innerHTML=table(state.clients.slice(0,5)); renderKanban(); renderCalendar() }
+$$("[data-dash]").forEach(b=>b.onclick=()=>{$$("[data-dash]").forEach(x=>x.classList.toggle("active",x===b));["Recent","Kanban","Calendar"].forEach(x=>$("#dash"+x).classList.add("hidden"));$("#dash"+b.dataset.dash[0].toUpperCase()+b.dataset.dash.slice(1)).classList.remove("hidden")});
+function renderKanban(){const groups={"Non inviata":[],"Inviata":[],"Promemoria":[],"Completata":[]};state.clients.filter(c=>c.status!=="Archiviata").forEach(c=>(groups[c.status]||groups["Non inviata"]).push(c));$("#dashKanban").innerHTML='<div class="kanban">'+Object.entries(groups).map(([k,v])=>`<div class="kanban-col"><h3>${k} (${v.length})</h3>${v.map(c=>`<div class="kanban-card"><strong>${esc(c.name)}</strong><small>${esc(c.company||"")}</small><div class="toolbar"><button class="mini" onclick="editClient('${c.id}')">Apri</button></div></div>`).join("")||'<div class="empty">Vuoto</div>'}</div>`).join("")+'</div>'}
+function renderCalendar(){const now=new Date(),y=now.getFullYear(),m=now.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),days=[];for(let i=0;i<first.getDay();i++)days.push(null);for(let d=1;d<=last.getDate();d++)days.push(d);const heads=["Dom","Lun","Mar","Mer","Gio","Ven","Sab"].map(x=>`<div class="calendar-head">${x}</div>`).join("");$("#dashCalendar").innerHTML=`<h3>${now.toLocaleDateString("it-IT",{month:"long",year:"numeric"})}</h3><div class="calendar">${heads}${days.map(d=>d?`<div class="day"><div class="num">${d}</div>${state.clients.filter(c=>c.reminderDate===`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`).map(c=>`<div class="event">${esc(c.name)}</div>`).join("")}</div>`:'<div></div>').join("")}</div>`}
 function renderTemplates(){$("#templateList").innerHTML=state.templates.map(t=>`<div class="item"><div><strong>${esc(t.name)}</strong><div class="muted">${esc(t.subject)}</div></div><button class="btn" onclick="editTemplate('${t.id}')">Modifica</button></div>`).join("");if(!$("#tplId").value&&state.templates[0])editTemplate(state.templates[0].id)}
 window.editTemplate=id=>{const t=tpl(id);$("#tplId").value=t.id;$("#tplName").value=t.name;$("#tplSubject").value=t.subject;$("#tplBody").value=t.body};$("#newTemplate").onclick=()=>{$("#templateForm").reset();$("#tplId").value=""};
 $("#templateForm").onsubmit=e=>{e.preventDefault();const t={id:$("#tplId").value||uid("t"),name:$("#tplName").value.trim(),subject:$("#tplSubject").value.trim(),body:$("#tplBody").value.trim()},i=state.templates.findIndex(x=>x.id===t.id);if(i>=0)state.templates[i]=t;else state.templates.push(t);save();renderAll();editTemplate(t.id);toast("Template salvato")};
 $("#tplDelete").onclick=()=>{const id=$("#tplId").value;if(state.templates.length<=1)return toast("Mantieni almeno un template");if(confirm("Eliminare il template?")){state.templates=state.templates.filter(x=>x.id!==id);save();$("#templateForm").reset();renderAll()}};
 $("#tplExport").onclick=()=>{const t=tpl($("#tplId").value),b=new Blob([JSON.stringify({type:"reviewflow-template",template:t},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="template-"+t.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")+".json";a.click();URL.revokeObjectURL(a.href)};
-function renderActivities(){$("#activityList").innerHTML=state.activities.length?state.activities.map(a=>`<div class="item"><div><strong>${esc(a.name)}</strong><div class="muted">${esc(a.reviewLink)}</div></div><div class="actions"><button class="btn" onclick="useActivity('${a.id}')">Usa</button><button class="btn danger" onclick="removeActivity('${a.id}')">Elimina</button></div></div>`).join(""):'<div class="empty">Nessuna attività salvata.</div>'}
-$("#activitySave").onclick=()=>{const n=$("#activityName").value.trim(),l=$("#activityLink").value.trim();if(!n||!l)return toast("Inserisci nome e link");const e=state.activities.find(a=>a.name.toLowerCase()===n.toLowerCase());if(e)e.reviewLink=l;else state.activities.push({id:uid("a"),name:n,reviewLink:l});save();$("#activityName").value="";$("#activityLink").value="";renderAll()};
-window.useActivity=id=>{const a=state.activities.find(x=>x.id===id);go("dashboard");$("#activityId").value=a.id;$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;updatePreview()};window.removeActivity=id=>{if(confirm("Eliminare l’attività?")){state.activities=state.activities.filter(x=>x.id!==id);save();renderAll()}};
-$("#settingsForm").onsubmit=e=>{e.preventDefault();state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim()};save();toast("Impostazioni salvate")};
-function loadSettings(){$("#signature").value=state.settings.signature||"";$("#defaultCompany").value=state.settings.defaultCompany||"";$("#defaultReviewLink").value=state.settings.defaultReviewLink||""}
+function renderActivities(){$("#activityList").innerHTML=state.activities.length?state.activities.map(a=>`<div class="item"><div><strong>${esc(a.name)}</strong><div class="muted">${esc(a.reviewLink)} · ${a.reminderDays||7} giorni</div></div><div class="actions"><button class="btn" onclick="useActivity('${a.id}')">Usa</button><button class="btn danger" onclick="removeActivity('${a.id}')">Elimina</button></div></div>`).join(""):'<div class="empty">Nessuna attività salvata.</div>'}
+$("#activitySave").onclick=()=>{const n=$("#activityName").value.trim(),l=$("#activityLink").value.trim(),r=Number($("#activityReminderDays").value)||7;if(!n||!l)return toast("Inserisci nome e link");const e=state.activities.find(a=>a.name.toLowerCase()===n.toLowerCase());if(e){e.reviewLink=l;e.reminderDays=r}else state.activities.push({id:uid("a"),name:n,reviewLink:l,reminderDays:r});save();$("#activityName").value="";$("#activityLink").value="";renderAll()};
+window.useActivity=id=>{const a=state.activities.find(x=>x.id===id);go("dashboard");$("#activityId").value=a.id;$("#company").value=a.name;$("#reviewLink").value=a.reviewLink;const d=new Date();d.setDate(d.getDate()+(a.reminderDays||7));$("#reminderDate").value=d.toISOString().slice(0,10);updatePreview()};window.removeActivity=id=>{if(confirm("Eliminare l’attività?")){state.activities=state.activities.filter(x=>x.id!==id);save();renderAll()}};
+$("#settingsForm").onsubmit=e=>{e.preventDefault();state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim(),theme:$("#themeSelect").value};save();applyTheme();toast("Impostazioni salvate")};
+function loadSettings(){$("#signature").value=state.settings.signature||"";$("#defaultCompany").value=state.settings.defaultCompany||"";$("#defaultReviewLink").value=state.settings.defaultReviewLink||"";$("#themeSelect").value=state.settings.theme||"auto"}
 function download(name,content,type){const b=new Blob([content],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
-$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"1.2",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,theme:state.theme},null,2),"application/json");
-$("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.clients)||!Array.isArray(d.templates))throw 0;if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.theme=d.theme==="dark"?"dark":"light";save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
-function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}$("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\\n"),"text/csv")};
-$("#csvIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const lines=r.result.split(/\\r?\\n/).filter(Boolean),parse=l=>{let a=[],c="",q=false;for(let i=0;i<l.length;i++){let ch=l[i];if(ch=='"'&&l[i+1]=='"'){c+='"';i++}else if(ch=='"')q=!q;else if(ch==","&&!q){a.push(c);c=""}else c+=ch}a.push(c);return a},h=parse(lines[0]).map(x=>x.toLowerCase()),ix=x=>h.indexOf(x);lines.slice(1).forEach(l=>{const a=parse(l),email=a[ix("email")]||"";if(!email)return;state.clients.push({id:uid("c"),name:a[ix("nome")]||"",email,phone:a[ix("telefono")]||"",company:a[ix("azienda")]||"",reviewLink:a[ix("link_recensione")]||"",templateId:state.templates[0].id,reminderTemplateId:state.templates[1]?.id||state.templates[0].id,reminderDate:a[ix("data_promemoria")]||"",note:a[ix("nota")]||"",status:a[ix("stato")]||"Non inviata",lastSentAt:a[ix("ultimo_invio")]||null,createdAt:new Date().toISOString()})});save();renderAll();toast("CSV importato")};r.readAsText(f);e.target.value=""};
-$("#clearAll").onclick=()=>{if($("#deleteWord").value.trim()!=="CANCELLA")return toast("Scrivi CANCELLA");if(confirm("Cancellare definitivamente tutti i dati?")){["rf_clients","rf_templates","rf_settings","rf_activities","rf_theme"].forEach(localStorage.removeItem.bind(localStorage));location.reload()}};
-function renderAll(){renderOptions();renderStats();renderClients();renderTemplates();renderActivities();loadSettings();applyTheme()}
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.1-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
+$("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.clients)||!Array.isArray(d.templates))throw 0;if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
+function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}
+$("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
+function importCsvFile(f){const r=new FileReader();r.onload=()=>{const lines=r.result.split(/\r?\n/).filter(Boolean),parse=l=>{let a=[],c="",q=false;for(let i=0;i<l.length;i++){let ch=l[i];if(ch=='"'&&l[i+1]=='"'){c+='"';i++}else if(ch=='"')q=!q;else if(ch==","&&!q){a.push(c);c=""}else c+=ch}a.push(c);return a},h=parse(lines[0]).map(x=>x.toLowerCase()),ix=x=>h.indexOf(x);lines.slice(1).forEach(l=>{const a=parse(l),email=a[ix("email")]||"";if(!email)return;state.clients.push({id:uid("c"),name:a[ix("nome")]||"",email,phone:a[ix("telefono")]||"",company:a[ix("azienda")]||"",reviewLink:a[ix("link_recensione")]||"",templateId:state.templates[0].id,reminderTemplateId:state.templates[1]?.id||state.templates[0].id,reminderDate:a[ix("data_promemoria")]||"",note:a[ix("nota")]||"",status:a[ix("stato")]||"Non inviata",lastSentAt:a[ix("ultimo_invio")]||null,createdAt:new Date().toISOString()})});save();renderAll();toast("CSV importato")};r.readAsText(f)}
+$("#csvIn").onchange=e=>{if(e.target.files[0])importCsvFile(e.target.files[0]);e.target.value=""};$("#dropzone").onclick=()=>$("#csvIn").click();["dragenter","dragover"].forEach(ev=>$("#dropzone").addEventListener(ev,e=>{e.preventDefault();$("#dropzone").classList.add("drag")}));["dragleave","drop"].forEach(ev=>$("#dropzone").addEventListener(ev,e=>{e.preventDefault();$("#dropzone").classList.remove("drag")}));$("#dropzone").addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)importCsvFile(f)});
+window.showTimeline=id=>{const c=state.clients.find(x=>x.id===id),events=state.timeline.filter(x=>x.clientId===id);$("#modalTitle").textContent="Timeline · "+c.name;$("#modalBody").innerHTML=events.length?`<div class="timeline">${events.map(e=>`<div class="timeline-item"><strong>${esc(e.type)}</strong><div>${esc(e.detail)}</div><small class="muted">${new Date(e.date).toLocaleString("it-IT")}</small></div>`).join("")}</div>`:'<div class="empty">Nessun evento.</div>';$("#modal").classList.remove("hidden")};
+function qrSvg(text,size=220){
+  const QRCode=window.EmbeddedQRCode;
+  const qr=new QRCode(-1,1);
+  qr.addData(text);
+  qr.make();
+  const count=qr.getModuleCount(), quiet=4, cell=Math.floor(size/(count+quiet*2));
+  const real=(count+quiet*2)*cell;
+  let rects=`<rect width="${real}" height="${real}" fill="white"/>`;
+  for(let r=0;r<count;r++)for(let c=0;c<count;c++){
+    if(qr.isDark(r,c))rects+=`<rect x="${(c+quiet)*cell}" y="${(r+quiet)*cell}" width="${cell}" height="${cell}" fill="black"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${real}" height="${real}" viewBox="0 0 ${real} ${real}">${rects}</svg>`;
+}
+window.showQr=id=>{
+  const c=state.clients.find(x=>x.id===id);
+  $("#modalTitle").textContent="QR Code · "+c.name;
+  $("#modalBody").innerHTML=`<div class="qr-wrap">${qrSvg(c.reviewLink)}</div><div class="toolbar"><button class="btn" id="qrCopyBtn">Copia link</button><button class="btn" id="qrDownloadBtn">Scarica QR</button></div>`;
+  $("#qrCopyBtn").onclick=async()=>{await navigator.clipboard.writeText(c.reviewLink);toast("Link copiato")};
+  $("#qrDownloadBtn").onclick=()=>{
+    const blob=new Blob([qrSvg(c.reviewLink,600)],{type:"image/svg+xml"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="qr-"+c.name.toLowerCase().replace(/[^a-z0-9]+/g,"-")+".svg";
+    a.click();URL.revokeObjectURL(a.href);
+  };
+  $("#modal").classList.remove("hidden");
+};
+$("#modalClose").onclick=()=>$("#modal").classList.add("hidden");$("#modal").onclick=e=>{if(e.target===$("#modal"))$("#modal").classList.add("hidden")};
+$("#clearAll").onclick=()=>{if($("#deleteWord").value.trim()!=="CANCELLA")return toast("Scrivi CANCELLA");if(confirm("Cancellare definitivamente tutti i dati?")){["rf2_clients","rf2_templates","rf2_settings","rf2_activities","rf2_timeline"].forEach(k=>localStorage.removeItem(k));location.reload()}};
+function renderAll(){renderOptions();renderStats();renderClients();renderTemplates();renderActivities();loadSettings();applyTheme();renderDash()}
 renderAll();resetForm();
 </script>
-</body></html>
+</body>
+</html>
