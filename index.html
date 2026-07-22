@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReviewFlow 2.7 Standalone</title>
+<title>ReviewFlow 2.8 Standalone</title>
 <style>
 :root{
   --bg:#f5f7fb;--panel:#fff;--panel2:#f8fafc;--text:#182230;--muted:#667085;
@@ -74,6 +74,7 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
   <div class="nav">
     <button class="active" data-view="dashboard"><span class="icon">⌂</span>Dashboard</button>
     <button data-view="clients"><span class="icon">👥</span>Clienti</button>
+    <button data-view="delivery"><span class="icon">✓</span>Report invii</button>
     <button data-view="templates"><span class="icon">✉</span>Template</button>
     <button data-view="settings"><span class="icon">⚙</span>Impostazioni</button>
   </div>
@@ -87,7 +88,7 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
 
   <div class="grid stats">
     <div class="card stat"><div class="label">CLIENTI</div><div class="value" id="sTotal">0</div><div class="hint" id="hTotal">0 questa settimana</div></div>
-    <div class="card stat"><div class="label">EMAIL INVIATE</div><div class="value" id="sSent">0</div><div class="hint" id="hSent">0 questa settimana</div></div>
+    <div class="card stat"><div class="label">INVII CONFERMATI</div><div class="value" id="sSent">0</div><div class="hint" id="hSent">0 questa settimana</div></div>
     <div class="card stat"><div class="label">DA RICONTATTARE</div><div class="value" id="sDue">0</div><div class="hint" id="hDue">0 scaduti</div></div>
     <div class="card stat"><div class="label">COMPLETATE</div><div class="value" id="sDone">0</div><div class="hint" id="hRate">Conversione 0%</div></div>
   </div>
@@ -144,6 +145,35 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
   </div>
 </section>
 
+<section id="delivery" class="hidden">
+  <div class="top">
+    <div>
+      <h1>Report invii email</h1>
+      <div class="muted">Il file standalone può rilevare l’apertura della bozza, ma non la spedizione effettuata dal programma Mail. Conferma manualmente gli invii realmente completati.</div>
+    </div>
+    <button class="btn" id="deliveryExport">Esporta report CSV</button>
+  </div>
+  <div class="grid stats">
+    <div class="card stat"><div class="label">NON INVIATE</div><div class="value" id="rNotSent">0</div><div class="hint">Nessun tentativo registrato</div></div>
+    <div class="card stat"><div class="label">DA VERIFICARE</div><div class="value" id="rPending">0</div><div class="hint">Bozza aperta, invio non confermato</div></div>
+    <div class="card stat"><div class="label">CONFERMATE</div><div class="value" id="rConfirmed">0</div><div class="hint">Confermate manualmente</div></div>
+    <div class="card stat"><div class="label">TENTATIVI TOTALI</div><div class="value" id="rAttempts">0</div><div class="hint">Aperture email e reinvii</div></div>
+  </div>
+  <div class="card">
+    <div class="actions" style="margin-bottom:14px">
+      <input id="deliverySearch" placeholder="Cerca cliente o email">
+      <select id="deliveryFilter">
+        <option value="unconfirmed">Non confermate</option>
+        <option value="all">Tutte</option>
+        <option value="not_sent">Non inviate</option>
+        <option value="pending">Da verificare</option>
+        <option value="confirmed">Confermate</option>
+      </select>
+    </div>
+    <div id="deliveryTable"></div>
+  </div>
+</section>
+
 <section id="clients" class="hidden">
   <div class="top">
     <div><h1>Clienti</h1><div class="muted">Gestione completa delle richieste.</div></div>
@@ -157,7 +187,7 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
       <input id="csvIn" type="file" accept=".csv,.xlsx" class="hidden">
     </label>
     <div id="importStatus" class="hidden" style="margin-top:12px"></div>
-    <div class="actions" style="margin:14px 0"><input id="search" placeholder="Cerca cliente"><select id="statusFilter"><option value="">Tutti gli stati</option><option>Non inviata</option><option>Inviata</option><option>Promemoria</option><option>Completata</option><option>Archiviata</option></select><select id="dueFilter"><option value="">Tutte le scadenze</option><option value="due">Da ricontattare</option><option value="future">Programmate</option><option value="none">Senza data</option></select></div>
+    <div class="actions" style="margin:14px 0"><input id="search" placeholder="Cerca cliente"><select id="statusFilter"><option value="">Tutti gli stati</option><option>Non inviata</option><option>Bozza aperta</option><option>Invio confermato</option><option>Promemoria aperto</option><option>Completata</option><option>Archiviata</option></select><select id="dueFilter"><option value="">Tutte le scadenze</option><option value="due">Da ricontattare</option><option value="future">Programmate</option><option value="none">Senza data</option></select></div>
     <div id="clientTable"></div>
   </div>
 </section>
@@ -1511,6 +1541,19 @@ if(!Array.isArray(state.templates)||!state.templates.length)state.templates=DEF.
 if(!state.settings||typeof state.settings!=="object")state.settings={"signature":"","defaultCompany":"","defaultReviewLink":"","theme":"auto"};
 if(!Array.isArray(state.activities))state.activities=[];
 if(!Array.isArray(state.timeline))state.timeline=[];
+state.clients.forEach(c=>{
+  c.sendAttempts=Number(c.sendAttempts)||0;
+  if(c.status==="Inviata"){
+    c.status="Bozza aperta";
+    c.emailOpenedAt=c.emailOpenedAt||c.lastSentAt||null;
+    c.sendAttempts=Math.max(c.sendAttempts,1);
+  }else if(c.status==="Promemoria"){
+    c.status="Promemoria aperto";
+    c.emailOpenedAt=c.emailOpenedAt||c.lastSentAt||null;
+    c.sendAttempts=Math.max(c.sendAttempts,1);
+  }
+  if(c.confirmedSentAt&&!["Completata","Archiviata"].includes(c.status))c.status="Invio confermato";
+});
 let lastSavedId=null;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],uid=p=>p+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -1547,7 +1590,7 @@ $("#activityId").onchange=e=>{const a=state.activities.find(x=>x.id===e.target.v
 function resetForm(){$("#clientForm").reset();$("#clientId").value="";$("#company").value=state.settings.defaultCompany||"";$("#reviewLink").value=state.settings.defaultReviewLink||"";$("#templateId").value=state.templates[0]?.id||"";$("#reminderTemplateId").value=state.templates[1]?.id||state.templates[0]?.id||"";$("#postSave").classList.add("hidden");updatePreview()}
 $("#resetBtn").onclick=resetForm;$("#newBtn").onclick=()=>{go("dashboard");resetForm();$("#name").focus()};
 function addTimeline(clientId,type,detail){state.timeline.unshift({id:uid("ev"),clientId,type,detail,date:new Date().toISOString()})}
-$("#clientForm").onsubmit=e=>{e.preventDefault();const c=formData();if(!c.name||!c.email||!c.reviewLink)return toast("Compila i campi obbligatori");if(state.clients.some(x=>x.email.toLowerCase()===c.email.toLowerCase()&&x.id!==c.id&&x.status!=="Archiviata"))return toast("Email già presente tra i clienti attivi");const now=new Date().toISOString();if(c.id){const i=state.clients.findIndex(x=>x.id===c.id);state.clients[i]={...state.clients[i],...c,updatedAt:now};lastSavedId=c.id;addTimeline(c.id,"Modifica","Dati cliente aggiornati")}else{const n={...c,id:uid("c"),status:"Non inviata",createdAt:now,updatedAt:now,lastSentAt:null};state.clients.unshift(n);lastSavedId=n.id;addTimeline(n.id,"Creazione","Cliente inserito")}save();renderAll();$("#postSave").classList.remove("hidden");toast("Cliente salvato")};
+$("#clientForm").onsubmit=e=>{e.preventDefault();const c=formData();if(!c.name||!c.email||!c.reviewLink)return toast("Compila i campi obbligatori");if(state.clients.some(x=>x.email.toLowerCase()===c.email.toLowerCase()&&x.id!==c.id&&x.status!=="Archiviata"))return toast("Email già presente tra i clienti attivi");const now=new Date().toISOString();if(c.id){const i=state.clients.findIndex(x=>x.id===c.id);state.clients[i]={...state.clients[i],...c,updatedAt:now};lastSavedId=c.id;addTimeline(c.id,"Modifica","Dati cliente aggiornati")}else{const n={...c,id:uid("c"),status:"Non inviata",createdAt:now,updatedAt:now,lastSentAt:null,emailOpenedAt:null,confirmedSentAt:null,sendAttempts:0};state.clients.unshift(n);lastSavedId=n.id;addTimeline(n.id,"Creazione","Cliente inserito")}save();renderAll();$("#postSave").classList.remove("hidden");toast("Cliente salvato")};
 
 function mailHref(c,rem=false){ return mail(c,rem); }
 function whatsappHref(c,rem=false){ return wa(c,rem); }
@@ -1574,10 +1617,27 @@ async function copyToClipboard(text){
 }
 function mail(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),body=fill(t.body,c)+"\n\n"+c.reviewLink;return`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(fill(t.subject,c))}&body=${encodeURIComponent(body)}`}
 function wa(c,rem=false){const t=tpl(rem?(c.reminderTemplateId||c.templateId):c.templateId),body=fill(t.body,c)+"\n\n"+c.reviewLink,p=(c.phone||"").replace(/\D/g,"");return`https://wa.me/${p}?text=${encodeURIComponent(body)}`}
-function touch(c,rem,channel){c.status=rem?"Promemoria":"Inviata";c.lastSentAt=new Date().toISOString();addTimeline(c.id,rem?"Promemoria":"Invio",channel);save();renderAll()}
+function recordAttempt(c,rem=false,channel="Email"){
+  const now=new Date().toISOString();
+  c.status=rem?"Promemoria aperto":"Bozza aperta";
+  c.emailOpenedAt=now;
+  c.lastSentAt=now;
+  c.sendAttempts=(Number(c.sendAttempts)||0)+1;
+  c.confirmedSentAt=null;
+  addTimeline(c.id,rem?"Promemoria aperto":"Bozza email aperta",channel+" · tentativo "+c.sendAttempts);
+  save();renderAll();
+}
+function confirmSent(c){
+  const now=new Date().toISOString();
+  c.status="Invio confermato";
+  c.confirmedSentAt=now;
+  c.lastSentAt=now;
+  addTimeline(c.id,"Invio confermato","Conferma manuale");
+  save();renderAll();
+}
 window.markSent=(id,rem,channel)=>{
   const c=state.clients.find(x=>x.id===id);
-  if(c)touch(c,rem,channel);
+  if(c)recordAttempt(c,rem,channel);
 };
 
 $("#openEmail").onclick=()=>{const c=formData();if(!validEmail(c.email))return toast("Inserisci un’email valida");window.location.href=mail(c,false)};
@@ -1595,10 +1655,11 @@ function days(x){
   return Number.isNaN(d.getTime())?null:Math.max(0,Math.floor((Date.now()-d.getTime())/86400000));
 }
 function isDue(c){if(!c.reminderDate||["Completata","Archiviata"].includes(c.status))return false;const t=new Date();t.setHours(0,0,0,0);return new Date(c.reminderDate+"T00:00:00")<=t}
-function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span></td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${days(c.lastSentAt)!==null?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="row-actions">
+function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</div>';return`<div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Contatti</th><th>Azienda</th><th>Stato</th><th>Promemoria</th><th>Ultimo invio</th><th>Azioni</th></tr></thead><tbody>${rows.map(c=>`<tr class="${isDue(c)?"overdue":""} ${c.status==="Archiviata"?"archived":""}"><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.note||"")}</div></td><td>${esc(c.email)}<div class="muted">${esc(c.phone||"")}</div></td><td>${esc(c.company||"—")}</td><td><span class="badge">${esc(c.status)}</span>${c.confirmedSentAt?`<div class="muted">Confermata ${dateIt(c.confirmedSentAt)}</div>`:c.emailOpenedAt?`<div class="muted">Da verificare · ${Number(c.sendAttempts)||1} tentativi</div>`:""}</td><td>${dateIt(c.reminderDate)}</td><td>${dateIt(c.lastSentAt)}${days(c.lastSentAt)!==null?`<div class="muted">${days(c.lastSentAt)} giorni fa</div>`:""}</td><td><div class="row-actions">
 <button type="button" class="mini" data-action="edit" data-id="${c.id}">Modifica</button>
 <button type="button" class="mini" data-action="duplicate" data-id="${c.id}">Duplica</button>
-<button type="button" class="mini" data-action="email" data-id="${c.id}">Email</button>
+<button type="button" class="mini" data-action="email" data-id="${c.id}">${c.emailOpenedAt&&!c.confirmedSentAt?"Reinvia":"Email"}</button>
+<button type="button" class="mini" data-action="confirm" data-id="${c.id}" ${c.confirmedSentAt?"disabled":""}>Conferma inviata</button>
 <button type="button" class="mini" data-action="whatsapp" data-id="${c.id}">WhatsApp</button>
 <button type="button" class="mini" data-action="reminder" data-id="${c.id}">Promemoria</button>
 <button type="button" class="mini" data-action="timeline" data-id="${c.id}">Timeline</button>
@@ -1638,19 +1699,20 @@ function bindClientActions(){
           case "email":
             if(!validEmail(client.email)){toast("Email cliente non valida");return}
             window.location.href=mail(client,false);
-            touch(client,false,"Email");
+            recordAttempt(client,false,"Email");
             break;
           case "whatsapp":
             if(!client.phone){toast("Numero WhatsApp mancante");return}
             const waWindow=window.open(wa(client,false),"_blank","noopener");
             if(!waWindow)toast("Consenti l’apertura delle finestre per WhatsApp");
-            else touch(client,false,"WhatsApp");
+            else recordAttempt(client,false,"WhatsApp");
             break;
           case "reminder":
             if(!validEmail(client.email)){toast("Email cliente non valida");return}
             window.location.href=mail(client,true);
-            touch(client,true,"Email");
+            recordAttempt(client,true,"Email");
             break;
+          case "confirm": confirmSent(client); break;
           case "timeline": showTimeline(id); break;
           case "qr": showQr(id); break;
           case "complete": completeClient(id); break;
@@ -1668,14 +1730,95 @@ $("#search").oninput=renderClients;$("#statusFilter").onchange=renderClients;$("
 
 window.editClient=id=>{const c=state.clients.find(x=>x.id===id);go("dashboard");Object.entries({clientId:c.id,name:c.name,email:c.email,phone:c.phone||"",activityId:c.activityId||"",company:c.company||"",reminderDate:c.reminderDate||"",templateId:c.templateId,reminderTemplateId:c.reminderTemplateId||c.templateId,reviewLink:c.reviewLink,note:c.note||""}).forEach(([k,v])=>$("#"+k).value=v);updatePreview()};
 window.duplicateClient=id=>{const c=state.clients.find(x=>x.id===id),n={...c,id:uid("c"),name:c.name+" - copia",email:"",status:"Non inviata",lastSentAt:null,createdAt:new Date().toISOString()};state.clients.unshift(n);addTimeline(n.id,"Duplicazione","Creato da "+c.name);save();renderAll();editClient(n.id);toast("Cliente duplicato")};
-window.sendEmail=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem,"Email");window.location.assign(mail(c,rem))};window.sendWhatsApp=(id,rem)=>{const c=state.clients.find(x=>x.id===id);touch(c,rem,"WhatsApp");window.open(wa(c,rem),"_blank")};
+window.sendEmail=(id,rem)=>{const c=state.clients.find(x=>x.id===id);if(!c||!validEmail(c.email))return toast("Email cliente non valida");window.location.assign(mail(c,rem));recordAttempt(c,rem,"Email")};
+window.sendWhatsApp=(id,rem)=>{const c=state.clients.find(x=>x.id===id);if(!c||!c.phone)return toast("Numero WhatsApp mancante");const w=window.open(wa(c,rem),"_blank","noopener");if(w)recordAttempt(c,rem,"WhatsApp");else toast("Consenti l’apertura delle finestre")};
 window.completeClient=id=>{const c=state.clients.find(x=>x.id===id);c.status="Completata";addTimeline(c.id,"Completamento","Recensione completata");save();renderAll()};window.archiveClient=id=>{const c=state.clients.find(x=>x.id===id);c.status=c.status==="Archiviata"?"Non inviata":"Archiviata";addTimeline(c.id,c.status==="Archiviata"?"Archiviazione":"Ripristino","Stato aggiornato");save();renderAll()};window.removeClient=id=>{if(confirm("Eliminare il cliente?")){state.clients=state.clients.filter(x=>x.id!==id);state.timeline=state.timeline.filter(x=>x.clientId!==id);save();renderAll()}};
 function weekStart(){const d=new Date();d.setDate(d.getDate()-7);return d}
-function renderStats(){const sent=state.clients.filter(c=>["Inviata","Promemoria","Completata"].includes(c.status)).length,done=state.clients.filter(c=>c.status==="Completata").length,recent=state.clients.filter(c=>new Date(c.createdAt)>=weekStart()).length,recentSent=state.clients.filter(c=>c.lastSentAt&&new Date(c.lastSentAt)>=weekStart()).length;$("#sTotal").textContent=state.clients.length;$("#sSent").textContent=sent;$("#sDue").textContent=state.clients.filter(isDue).length;$("#sDone").textContent=done;$("#hTotal").textContent=recent+" questa settimana";$("#hSent").textContent=recentSent+" questa settimana";$("#hDue").textContent=state.clients.filter(isDue).length+" scaduti";$("#hRate").textContent="Conversione "+(sent?Math.round(done/sent*100):0)+"%"}
+function renderStats(){
+  const confirmed=state.clients.filter(c=>c.confirmedSentAt||["Invio confermato","Completata"].includes(c.status)).length;
+  const done=state.clients.filter(c=>c.status==="Completata").length;
+  const recent=state.clients.filter(c=>new Date(c.createdAt)>=weekStart()).length;
+  const recentConfirmed=state.clients.filter(c=>c.confirmedSentAt&&new Date(c.confirmedSentAt)>=weekStart()).length;
+  $("#sTotal").textContent=state.clients.length;
+  $("#sSent").textContent=confirmed;
+  $("#sDue").textContent=state.clients.filter(isDue).length;
+  $("#sDone").textContent=done;
+  $("#hTotal").textContent=recent+" questa settimana";
+  $("#hSent").textContent=recentConfirmed+" questa settimana";
+  $("#hDue").textContent=state.clients.filter(isDue).length+" scaduti";
+  $("#hRate").textContent="Conversione "+(confirmed?Math.round(done/confirmed*100):0)+"%";
+}
 function renderDash(){ $("#dashRecent").innerHTML=table(state.clients.slice(0,5)); renderKanban(); renderCalendar() }
 $$("[data-dash]").forEach(b=>b.onclick=()=>{$$("[data-dash]").forEach(x=>x.classList.toggle("active",x===b));["Recent","Kanban","Calendar"].forEach(x=>$("#dash"+x).classList.add("hidden"));$("#dash"+b.dataset.dash[0].toUpperCase()+b.dataset.dash.slice(1)).classList.remove("hidden")});
-function renderKanban(){const groups={"Non inviata":[],"Inviata":[],"Promemoria":[],"Completata":[]};state.clients.filter(c=>c.status!=="Archiviata").forEach(c=>(groups[c.status]||groups["Non inviata"]).push(c));$("#dashKanban").innerHTML='<div class="kanban">'+Object.entries(groups).map(([k,v])=>`<div class="kanban-col"><h3>${k} (${v.length})</h3>${v.map(c=>`<div class="kanban-card"><strong>${esc(c.name)}</strong><small>${esc(c.company||"")}</small><div class="toolbar"><button class="mini" onclick="editClient('${c.id}')">Apri</button></div></div>`).join("")||'<div class="empty">Vuoto</div>'}</div>`).join("")+'</div>'}
+function renderKanban(){const groups={"Non inviata":[],"Bozza aperta":[],"Invio confermato":[],"Completata":[]};state.clients.filter(c=>c.status!=="Archiviata").forEach(c=>(groups[c.status]||groups["Non inviata"]).push(c));$("#dashKanban").innerHTML='<div class="kanban">'+Object.entries(groups).map(([k,v])=>`<div class="kanban-col"><h3>${k} (${v.length})</h3>${v.map(c=>`<div class="kanban-card"><strong>${esc(c.name)}</strong><small>${esc(c.company||"")}</small><div class="toolbar"><button class="mini" onclick="editClient('${c.id}')">Apri</button></div></div>`).join("")||'<div class="empty">Vuoto</div>'}</div>`).join("")+'</div>'}
 function renderCalendar(){const now=new Date(),y=now.getFullYear(),m=now.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0),days=[];for(let i=0;i<first.getDay();i++)days.push(null);for(let d=1;d<=last.getDate();d++)days.push(d);const heads=["Dom","Lun","Mar","Mer","Gio","Ven","Sab"].map(x=>`<div class="calendar-head">${x}</div>`).join("");$("#dashCalendar").innerHTML=`<h3>${now.toLocaleDateString("it-IT",{month:"long",year:"numeric"})}</h3><div class="calendar">${heads}${days.map(d=>d?`<div class="day"><div class="num">${d}</div>${state.clients.filter(c=>c.reminderDate===`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`).map(c=>`<div class="event">${esc(c.name)}</div>`).join("")}</div>`:'<div></div>').join("")}</div>`}
+
+function deliveryState(c){
+  if(c.confirmedSentAt||["Invio confermato","Completata"].includes(c.status))return"confirmed";
+  if(c.emailOpenedAt||Number(c.sendAttempts)>0||["Bozza aperta","Promemoria aperto"].includes(c.status))return"pending";
+  return"not_sent";
+}
+function renderDelivery(){
+  const search=($("#deliverySearch")?.value||"").toLowerCase();
+  const filter=$("#deliveryFilter")?.value||"unconfirmed";
+  const active=state.clients.filter(c=>c.status!=="Archiviata");
+  const rows=active.filter(c=>{
+    const ds=deliveryState(c);
+    const matches=!search||[c.name,c.email,c.company].join(" ").toLowerCase().includes(search);
+    const statusMatches=filter==="all"||(filter==="unconfirmed"&&ds!=="confirmed")||filter===ds;
+    return matches&&statusMatches;
+  });
+  const notSent=active.filter(c=>deliveryState(c)==="not_sent").length;
+  const pending=active.filter(c=>deliveryState(c)==="pending").length;
+  const confirmed=active.filter(c=>deliveryState(c)==="confirmed").length;
+  const attempts=active.reduce((sum,c)=>sum+(Number(c.sendAttempts)||0),0);
+  $("#rNotSent").textContent=notSent;
+  $("#rPending").textContent=pending;
+  $("#rConfirmed").textContent=confirmed;
+  $("#rAttempts").textContent=attempts;
+  $("#deliveryTable").innerHTML=rows.length?`<div class="table-wrap"><table class="table">
+    <thead><tr><th>Cliente</th><th>Email</th><th>Esito verificabile</th><th>Ultimo tentativo</th><th>Tentativi</th><th>Azioni</th></tr></thead>
+    <tbody>${rows.map(c=>{
+      const ds=deliveryState(c);
+      const label=ds==="confirmed"?"Invio confermato":ds==="pending"?"Da verificare":"Non inviata";
+      return`<tr><td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.company||"")}</div></td>
+      <td>${esc(c.email)}</td>
+      <td><span class="badge">${label}</span>${c.confirmedSentAt?`<div class="muted">${dateIt(c.confirmedSentAt)}</div>`:""}</td>
+      <td>${dateIt(c.emailOpenedAt||c.lastSentAt)}</td>
+      <td>${Number(c.sendAttempts)||0}</td>
+      <td><div class="row-actions">
+        ${ds!=="confirmed"?`<button type="button" class="mini" data-delivery-action="resend" data-id="${c.id}">Reinvia</button>
+        <button type="button" class="mini" data-delivery-action="confirm" data-id="${c.id}">Conferma inviata</button>`:
+        `<button type="button" class="mini" data-delivery-action="resend" data-id="${c.id}">Invia di nuovo</button>`}
+        <button type="button" class="mini" data-delivery-action="timeline" data-id="${c.id}">Timeline</button>
+      </div></td></tr>`;
+    }).join("")}</tbody></table></div>`:'<div class="empty">Nessun invio corrispondente al filtro.</div>';
+  $$("#deliveryTable [data-delivery-action]").forEach(btn=>btn.onclick=()=>{
+    const c=state.clients.find(x=>x.id===btn.dataset.id);
+    if(!c)return toast("Cliente non trovato");
+    if(btn.dataset.deliveryAction==="resend"){
+      if(!validEmail(c.email))return toast("Email cliente non valida");
+      window.location.href=mail(c,false);
+      recordAttempt(c,false,"Email");
+    }else if(btn.dataset.deliveryAction==="confirm"){
+      confirmSent(c);
+    }else if(btn.dataset.deliveryAction==="timeline"){
+      showTimeline(c.id);
+    }
+  });
+}
+$("#deliverySearch").oninput=renderDelivery;
+$("#deliveryFilter").onchange=renderDelivery;
+$("#deliveryExport").onclick=()=>{
+  const headers=["nome","email","azienda","stato_verifica","tentativi","ultimo_tentativo","invio_confermato"];
+  const rows=state.clients.filter(c=>c.status!=="Archiviata").map(c=>[
+    c.name,c.email,c.company||"",
+    deliveryState(c)==="confirmed"?"confermato":deliveryState(c)==="pending"?"da_verificare":"non_inviato",
+    Number(c.sendAttempts)||0,c.emailOpenedAt||c.lastSentAt||"",c.confirmedSentAt||""
+  ]);
+  download("reviewflow-report-invii.csv","\ufeff"+[headers.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv");
+};
+
 function renderTemplates(){$("#templateList").innerHTML=state.templates.map(t=>`<div class="item"><div><strong>${esc(t.name)}</strong><div class="muted">${esc(t.subject)}</div></div><button class="btn" onclick="editTemplate('${t.id}')">Modifica</button></div>`).join("");if(!$("#tplId").value&&state.templates[0])editTemplate(state.templates[0].id)}
 window.editTemplate=id=>{const t=tpl(id);$("#tplId").value=t.id;$("#tplName").value=t.name;$("#tplSubject").value=t.subject;$("#tplBody").value=t.body};$("#newTemplate").onclick=()=>{$("#templateForm").reset();$("#tplId").value=""};
 $("#templateForm").onsubmit=e=>{e.preventDefault();const t={id:$("#tplId").value||uid("t"),name:$("#tplName").value.trim(),subject:$("#tplSubject").value.trim(),body:$("#tplBody").value.trim()},i=state.templates.findIndex(x=>x.id===t.id);if(i>=0)state.templates[i]=t;else state.templates.push(t);save();renderAll();editTemplate(t.id);toast("Template salvato")};
@@ -1696,10 +1839,10 @@ function download(name,content,type){
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
-$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.7-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.8-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
 $("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||d.app!=="ReviewFlow"||!Array.isArray(d.clients)||!Array.isArray(d.templates)||!d.templates.length)throw new Error("Formato backup non riconosciuto");if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
 function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}
-$("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
+$("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_tentativo","tentativi","invio_confermato"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt,Number(c.sendAttempts)||0,c.confirmedSentAt||""]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
 
 function normalizeHeader(v){
   return String(v??"").trim().toLowerCase()
