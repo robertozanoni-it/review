@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReviewFlow 2.5 Standalone</title>
+<title>ReviewFlow 2.6 Standalone</title>
 <style>
 :root{
   --bg:#f5f7fb;--panel:#fff;--panel2:#f8fafc;--text:#182230;--muted:#667085;
@@ -179,7 +179,7 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
 </section>
 
 <section id="settings" class="hidden">
-  <div class="top"><div><h1>Impostazioni</h1><div class="muted">Dati predefiniti, attività, backup e installazione.</div></div></div>
+  <div class="top"><div><h1>Impostazioni</h1><div class="muted">Dati predefiniti, attività e backup.</div></div><span class="badge" id="jsStatus">JavaScript attivo</span></div>
   <div class="grid two">
     <div class="card"><h2>Dati predefiniti</h2><form id="settingsForm"><div class="field"><label>Firma</label><input id="signature"></div><div class="field"><label>Azienda predefinita</label><input id="defaultCompany"></div><div class="field"><label>Link recensione predefinito</label><input id="defaultReviewLink"></div><div class="field"><label>Tema</label><select id="themeSelect"><option value="auto">Automatico</option><option value="light">Giorno</option><option value="dark">Notte</option></select></div><div class="toolbar"><button class="btn primary">Salva impostazioni</button></div></form></div>
     <div class="card"><h2>Attività e link</h2><div class="field"><label>Nome attività</label><input id="activityName"></div><div class="field"><label>Link recensione</label><input id="activityLink"></div><div class="field"><label>Giorni promemoria predefiniti</label><input id="activityReminderDays" type="number" min="0" value="7"></div><div class="toolbar"><button class="btn primary" id="activitySave">Salva attività</button></div><div id="activityList" class="list" style="margin-top:14px"></div></div>
@@ -1543,51 +1543,61 @@ function table(rows){if(!rows.length)return'<div class="empty">Nessun cliente.</
 <button type="button" class="mini" data-action="archive" data-id="${c.id}">${c.status==="Archiviata"?"Ripristina":"Archivia"}</button>
 <button type="button" class="mini" data-action="delete" data-id="${c.id}">Elimina</button>
 </div></td></tr>`).join("")}</tbody></table></div>`}
-function renderClients(){const q=$("#search").value.toLowerCase(),s=$("#statusFilter").value,d=$("#dueFilter").value,t=new Date();t.setHours(0,0,0,0);const rows=state.clients.filter(c=>{const h=[c.name,c.email,c.phone,c.company,c.note].join(" ").toLowerCase();let ok=!q||h.includes(q);ok=ok&&(!s||c.status===s);if(d==="due")ok=ok&&isDue(c);if(d==="future")ok=ok&&c.reminderDate&&new Date(c.reminderDate+"T00:00:00")>t;if(d==="none")ok=ok&&!c.reminderDate;return ok});$("#clientTable").innerHTML=table(rows)}
-$("#search").oninput=renderClients;$("#statusFilter").onchange=renderClients;$("#dueFilter").onchange=renderClients;
-$("#clientTable").addEventListener("click",event=>{
-  const button=event.target.closest("[data-action]");
-  if(!button)return;
-  event.preventDefault();
-  event.stopPropagation();
-
-  const id=button.dataset.id;
-  const action=button.dataset.action;
-  const client=state.clients.find(c=>c.id===id);
-  if(!client){
-    toast("Cliente non trovato");
-    return;
-  }
-
-  try{
-    if(action==="edit") window.editClient(id);
-    else if(action==="duplicate") window.duplicateClient(id);
-    else if(action==="email"){
-      touch(client,false,"Email");
-      window.location.href=mail(client,false);
-    }
-    else if(action==="whatsapp"){
-      if(!client.phone){
-        toast("Numero WhatsApp mancante");
-        return;
+function renderClients(){
+  const q=$("#search").value.toLowerCase(),s=$("#statusFilter").value,d=$("#dueFilter").value,t=new Date();
+  t.setHours(0,0,0,0);
+  const rows=state.clients.filter(c=>{
+    const h=[c.name,c.email,c.phone,c.company,c.note].join(" ").toLowerCase();
+    let ok=!q||h.includes(q);
+    ok=ok&&(!s||c.status===s);
+    if(d==="due")ok=ok&&isDue(c);
+    if(d==="future")ok=ok&&c.reminderDate&&new Date(c.reminderDate+"T00:00:00")>t;
+    if(d==="none")ok=ok&&!c.reminderDate;
+    return ok;
+  });
+  $("#clientTable").innerHTML=table(rows);
+  bindClientActions();
+}
+function bindClientActions(){
+  $$("#clientTable [data-action]").forEach(button=>{
+    button.addEventListener("click",function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      const id=this.dataset.id;
+      const action=this.dataset.action;
+      const client=state.clients.find(c=>c.id===id);
+      if(!client){toast("Cliente non trovato");return}
+      try{
+        switch(action){
+          case "edit": editClient(id); break;
+          case "duplicate": duplicateClient(id); break;
+          case "email":
+            touch(client,false,"Email");
+            setTimeout(()=>{ window.location.href=mail(client,false); },20);
+            break;
+          case "whatsapp":
+            if(!client.phone){toast("Numero WhatsApp mancante");return}
+            touch(client,false,"WhatsApp");
+            window.open(wa(client,false),"_blank");
+            break;
+          case "reminder":
+            touch(client,true,"Email");
+            setTimeout(()=>{ window.location.href=mail(client,true); },20);
+            break;
+          case "timeline": showTimeline(id); break;
+          case "qr": showQr(id); break;
+          case "complete": completeClient(id); break;
+          case "archive": archiveClient(id); break;
+          case "delete": removeClient(id); break;
+        }
+      }catch(error){
+        console.error(error);
+        toast("Errore azione: "+(error.message||"sconosciuto"));
       }
-      touch(client,false,"WhatsApp");
-      window.open(wa(client,false),"_blank","noopener");
-    }
-    else if(action==="reminder"){
-      touch(client,true,"Email");
-      window.location.href=mail(client,true);
-    }
-    else if(action==="timeline") window.showTimeline(id);
-    else if(action==="qr") window.showQr(id);
-    else if(action==="complete") window.completeClient(id);
-    else if(action==="archive") window.archiveClient(id);
-    else if(action==="delete") window.removeClient(id);
-  }catch(error){
-    console.error(error);
-    toast("Azione non eseguita: "+(error.message||"errore sconosciuto"));
-  }
-});
+    });
+  });
+}
+$("#search").oninput=renderClients;$("#statusFilter").onchange=renderClients;$("#dueFilter").onchange=renderClients;
 
 window.editClient=id=>{const c=state.clients.find(x=>x.id===id);go("dashboard");Object.entries({clientId:c.id,name:c.name,email:c.email,phone:c.phone||"",activityId:c.activityId||"",company:c.company||"",reminderDate:c.reminderDate||"",templateId:c.templateId,reminderTemplateId:c.reminderTemplateId||c.templateId,reviewLink:c.reviewLink,note:c.note||""}).forEach(([k,v])=>$("#"+k).value=v);updatePreview()};
 window.duplicateClient=id=>{const c=state.clients.find(x=>x.id===id),n={...c,id:uid("c"),name:c.name+" - copia",email:"",status:"Non inviata",lastSentAt:null,createdAt:new Date().toISOString()};state.clients.unshift(n);addTimeline(n.id,"Duplicazione","Creato da "+c.name);save();renderAll();editClient(n.id);toast("Cliente duplicato")};
@@ -1610,7 +1620,7 @@ window.useActivity=id=>{const a=state.activities.find(x=>x.id===id);go("dashboar
 $("#settingsForm").onsubmit=e=>{e.preventDefault();state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim(),theme:$("#themeSelect").value};save();applyTheme();toast("Impostazioni salvate")};
 function loadSettings(){$("#signature").value=state.settings.signature||"";$("#defaultCompany").value=state.settings.defaultCompany||"";$("#defaultReviewLink").value=state.settings.defaultReviewLink||"";$("#themeSelect").value=state.settings.theme||"auto"}
 function download(name,content,type){const b=new Blob([content],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
-$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.5-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.6-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
 $("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.clients)||!Array.isArray(d.templates))throw 0;if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
 function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}
 $("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
