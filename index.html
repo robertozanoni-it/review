@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReviewFlow 2.8 Standalone</title>
+<title>ReviewFlow 3.0 Standalone</title>
 <style>
 :root{
   --bg:#f5f7fb;--panel:#fff;--panel2:#f8fafc;--text:#182230;--muted:#667085;
@@ -114,8 +114,8 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
         <h3>✓ Cliente salvato</h3>
         <div class="muted">Scegli subito l’azione successiva.</div>
         <div class="toolbar">
-          <button class="btn primary" id="postEmail">Invia email</button>
-          <button class="btn" id="postWhatsApp">Invia WhatsApp</button>
+          <button class="btn primary" id="postEmail">Apri email</button>
+          <button class="btn" id="postWhatsApp">Apri WhatsApp</button>
           <button class="btn" id="postCopy">Copia link</button>
           <button class="btn" id="postQr">QR Code</button>
         </div>
@@ -1572,7 +1572,7 @@ function save(){
   }
 }
 function toast(x){const t=$("#toast");t.textContent=x;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
-function go(v){["dashboard","clients","templates","settings"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));if(v==="clients")renderClients();if(v==="templates")renderTemplates();if(v==="settings")renderActivities()}
+function go(v){["dashboard","clients","delivery","templates","settings"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==v));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===v));if(v==="clients")renderClients();if(v==="delivery")renderDelivery();if(v==="templates")renderTemplates();if(v==="settings")renderActivities()}
 $$(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
 function resolvedTheme(){if(state.settings.theme==="auto")return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";return state.settings.theme}
 function applyTheme(){document.body.classList.toggle("dark",resolvedTheme()==="dark");$("#themeSelect").value=state.settings.theme||"auto";$("#themeBtn").textContent="Tema: "+(state.settings.theme==="auto"?"auto":state.settings.theme==="dark"?"notte":"giorno")}
@@ -1839,7 +1839,7 @@ function download(name,content,type){
   a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
-$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.8-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"3.0-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
 $("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||d.app!=="ReviewFlow"||!Array.isArray(d.clients)||!Array.isArray(d.templates)||!d.templates.length)throw new Error("Formato backup non riconosciuto");if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
 function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}
 $("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_tentativo","tentativi","invio_confermato"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt,Number(c.sendAttempts)||0,c.confirmedSentAt||""]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
@@ -2064,7 +2064,7 @@ window.showQr=id=>{
 };
 $("#modalClose").onclick=()=>$("#modal").classList.add("hidden");$("#modal").onclick=e=>{if(e.target===$("#modal"))$("#modal").classList.add("hidden")};
 $("#clearAll").onclick=()=>{if($("#deleteWord").value.trim()!=="CANCELLA")return toast("Scrivi CANCELLA");if(confirm("Cancellare definitivamente tutti i dati?")){["rf2_clients","rf2_templates","rf2_settings","rf2_activities","rf2_timeline"].forEach(k=>localStorage.removeItem(k));location.reload()}};
-function renderAll(){renderOptions();renderStats();renderClients();renderTemplates();renderActivities();loadSettings();applyTheme();renderDash()}
+function renderAll(){renderOptions();renderStats();renderClients();renderDelivery();renderTemplates();renderActivities();loadSettings();applyTheme();renderDash()}
 renderAll();resetForm();
 </script>
 </body>
