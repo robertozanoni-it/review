@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ReviewFlow 2.2 Standalone</title>
+<title>ReviewFlow 2.3 Standalone</title>
 <style>
 :root{
   --bg:#f5f7fb;--panel:#fff;--panel2:#f8fafc;--text:#182230;--muted:#667085;
@@ -55,7 +55,7 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tab{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 12px;border-radius:9px;font-weight:750}.tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .kanban{display:grid;grid-template-columns:repeat(4,minmax(260px,1fr));gap:14px;overflow:auto}.kanban-col{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:380px}.kanban-col h3{margin:0 0 12px}.kanban-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}.kanban-card strong{display:block}.kanban-card small{color:var(--muted)}
 .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.calendar-head{font-size:12px;font-weight:800;color:var(--muted);text-align:center}.day{min-height:110px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--panel2)}.day .num{font-size:12px;font-weight:800}.event{margin-top:6px;padding:6px;border-radius:7px;background:rgba(49,87,213,.12);font-size:11px;line-height:1.35}
-.dropzone{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;background:var(--panel2);transition:.2s}.dropzone.drag{border-color:var(--primary);background:rgba(49,87,213,.08)}
+.dropzone{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;background:var(--panel2);transition:.2s}.dropzone{display:block;cursor:pointer}.dropzone:hover,.dropzone:focus{border-color:var(--primary);background:rgba(49,87,213,.06);outline:none}.import-result{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--panel2)}.import-result.success{border-color:rgba(8,122,85,.4);background:rgba(8,122,85,.07)}.import-result.error{border-color:rgba(180,35,24,.4);background:rgba(180,35,24,.07)}.dropzone.drag{border-color:var(--primary);background:rgba(49,87,213,.08)}
 .list{display:grid;gap:10px}.item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:720px;width:100%;max-height:88vh;overflow:auto}
 .timeline{border-left:2px solid var(--line);margin-left:8px;padding-left:18px}.timeline-item{position:relative;margin-bottom:16px}.timeline-item:before{content:"";position:absolute;left:-24px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--primary)}
@@ -150,7 +150,13 @@ body.dark .badge{background:#1e3a8a;color:#dbeafe}.overdue{background:rgba(181,7
     <div class="actions"><button class="btn" id="csvOut">Esporta CSV</button><button class="btn primary" data-go="dashboard">+ Nuovo</button></div>
   </div>
   <div class="card">
-    <div id="dropzone" class="dropzone">Trascina qui un file CSV o XLSX oppure clicca per selezionarlo<input id="csvIn" type="file" accept=".csv,.xlsx" class="hidden"></div>
+    <label id="dropzone" class="dropzone" for="csvIn" tabindex="0">
+      <strong>Carica contatti</strong>
+      <div style="margin-top:6px">Trascina qui un file CSV o XLSX oppure clicca per selezionarlo</div>
+      <div class="muted" style="margin-top:7px;font-size:12px">Il file deve contenere almeno la colonna “email”.</div>
+      <input id="csvIn" type="file" accept=".csv,.xlsx" class="hidden">
+    </label>
+    <div id="importStatus" class="hidden" style="margin-top:12px"></div>
     <div class="actions" style="margin:14px 0"><input id="search" placeholder="Cerca cliente"><select id="statusFilter"><option value="">Tutti gli stati</option><option>Non inviata</option><option>Inviata</option><option>Promemoria</option><option>Completata</option><option>Archiviata</option></select><select id="dueFilter"><option value="">Tutte le scadenze</option><option value="due">Da ricontattare</option><option value="future">Programmate</option><option value="none">Senza data</option></select></div>
     <div id="clientTable"></div>
   </div>
@@ -1541,7 +1547,7 @@ window.useActivity=id=>{const a=state.activities.find(x=>x.id===id);go("dashboar
 $("#settingsForm").onsubmit=e=>{e.preventDefault();state.settings={signature:$("#signature").value.trim(),defaultCompany:$("#defaultCompany").value.trim(),defaultReviewLink:$("#defaultReviewLink").value.trim(),theme:$("#themeSelect").value};save();applyTheme();toast("Impostazioni salvate")};
 function loadSettings(){$("#signature").value=state.settings.signature||"";$("#defaultCompany").value=state.settings.defaultCompany||"";$("#defaultReviewLink").value=state.settings.defaultReviewLink||"";$("#themeSelect").value=state.settings.theme||"auto"}
 function download(name,content,type){const b=new Blob([content],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
-$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.2-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
+$("#backupOut").onclick=()=>download("reviewflow-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify({app:"ReviewFlow",version:"2.3-standalone",clients:state.clients,templates:state.templates,settings:state.settings,activities:state.activities,timeline:state.timeline},null,2),"application/json");
 $("#backupIn").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.clients)||!Array.isArray(d.templates))throw 0;if(confirm("Sostituire i dati attuali con il backup?")){state.clients=d.clients;state.templates=d.templates;state.settings=d.settings||{};state.activities=d.activities||[];state.timeline=d.timeline||[];save();renderAll();toast("Backup importato")}}catch{toast("Backup non valido")}};r.readAsText(f);e.target.value=""};
 function csvEscape(v){return`"${String(v??"").replaceAll('"','""')}"`}
 $("#csvOut").onclick=()=>{const h=["nome","email","telefono","azienda","link_recensione","template","template_promemoria","data_promemoria","nota","stato","ultimo_invio"],rows=state.clients.map(c=>[c.name,c.email,c.phone,c.company,c.reviewLink,tpl(c.templateId).name,tpl(c.reminderTemplateId).name,c.reminderDate,c.note,c.status,c.lastSentAt]);download("reviewflow-clienti.csv","\ufeff"+[h.join(","),...rows.map(r=>r.map(csvEscape).join(","))].join("\n"),"text/csv")};
@@ -1623,7 +1629,13 @@ async function parseXlsxFile(file){
   });
   return rows;
 }
-function rowsToClients(rows){
+
+function showImportStatus(type,title,detail){
+  const box=$("#importStatus");
+  box.className="import-result "+type;
+  box.innerHTML=`<strong>${esc(title)}</strong><div class="muted" style="margin-top:4px">${esc(detail)}</div>`;
+}
+function rowsToClients(rows,fileName){
   if(!rows.length)throw new Error("File vuoto");
   const headers=rows[0].map(normalizeHeader);
   const aliases={
@@ -1671,7 +1683,9 @@ function rowsToClients(rows){
     imported++;
   });
   save();renderAll();
-  toast(`${imported} importati · ${duplicates} duplicati · ${invalid} ignorati`);
+  const summary=`${imported} contatti importati · ${duplicates} duplicati · ${invalid} righe ignorate`;
+  showImportStatus("success","Importazione completata: "+fileName,summary);
+  toast(summary);
 }
 async function importContactsFile(file){
   try{
@@ -1680,10 +1694,12 @@ async function importContactsFile(file){
     if(ext==="xlsx") rows=await parseXlsxFile(file);
     else if(ext==="csv") rows=parseCsvText(await file.text());
     else throw new Error("Formato non supportato. Usa CSV o XLSX");
-    rowsToClients(rows);
+    rowsToClients(rows,file.name);
   }catch(err){
     console.error(err);
-    toast(err.message||"Impossibile importare il file");
+    const message=err.message||"Impossibile importare il file";
+    showImportStatus("error","Importazione non riuscita",message);
+    toast(message);
   }
 }
 $("#csvIn").onchange=e=>{
@@ -1691,6 +1707,31 @@ $("#csvIn").onchange=e=>{
   if(file)importContactsFile(file);
   e.target.value="";
 };
+const dropzone=$("#dropzone");
+["dragenter","dragover"].forEach(eventName=>{
+  dropzone.addEventListener(eventName,event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    dropzone.classList.add("drag");
+  });
+});
+["dragleave","drop"].forEach(eventName=>{
+  dropzone.addEventListener(eventName,event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    dropzone.classList.remove("drag");
+  });
+});
+dropzone.addEventListener("drop",event=>{
+  const file=event.dataTransfer?.files?.[0];
+  if(file)importContactsFile(file);
+});
+dropzone.addEventListener("keydown",event=>{
+  if(event.key==="Enter"||event.key===" "){
+    event.preventDefault();
+    $("#csvIn").click();
+  }
+});
 window.showTimeline=id=>{const c=state.clients.find(x=>x.id===id),events=state.timeline.filter(x=>x.clientId===id);$("#modalTitle").textContent="Timeline · "+c.name;$("#modalBody").innerHTML=events.length?`<div class="timeline">${events.map(e=>`<div class="timeline-item"><strong>${esc(e.type)}</strong><div>${esc(e.detail)}</div><small class="muted">${new Date(e.date).toLocaleString("it-IT")}</small></div>`).join("")}</div>`:'<div class="empty">Nessun evento.</div>';$("#modal").classList.remove("hidden")};
 function qrSvg(text,size=220){
   const QRCode=window.EmbeddedQRCode;
